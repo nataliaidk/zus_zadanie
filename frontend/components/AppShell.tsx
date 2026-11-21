@@ -74,14 +74,6 @@ export function AppShell({
           >
             Podstawa prawna
           </button>
-          <button
-            type="button"
-            className="control ghost"
-            aria-pressed={a11y.hardSituation}
-            onClick={() => setA11y({ hardSituation: !a11y.hardSituation })}
-          >
-            {COPY.hardMode}
-          </button>
         </div>
       </div>
       <header className="site-header">
@@ -128,20 +120,9 @@ export function AppShell({
           </button>
         )}
       </header>
-      {a11y.hardSituation ? (
-        <p className="hard-banner" role="status">
-          {COPY.hardBanner}
-        </p>
-      ) : null}
       </div>
       <p className="sr-only" aria-live="polite">
-        {loading
-          ? "Liczenie zasiłku…"
-          : error
-            ? error
-            : a11y.hardSituation
-              ? "Tryb trudna sytuacja włączony. Interfejs wyciszony."
-              : `Wielkość tekstu ${a11y.fontScale} procent.`}
+        {loading ? "Liczenie zasiłku…" : error ? error : `Wielkość tekstu ${a11y.fontScale} procent.`}
       </p>
       {error ? (
         <p className="wrap alert" role="alert">

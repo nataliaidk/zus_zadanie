@@ -59,55 +59,16 @@ html.contrast {
   --shadow-sm: none;
 }
 
-html.scale-125 main,
-html.scale-125 .site-footer {
-  font-size: 125%;
+html {
+  font-size: 16px;
 }
 
-html.scale-150 main,
-html.scale-150 .site-footer {
-  font-size: 150%;
+html.scale-125 {
+  font-size: 20px;
 }
 
-html.hard:not(.contrast) {
-  --bg-page: #f2f2f2;
-  --bg-card: #ffffff;
-  --bg-sidebar: #f0f0f0;
-  --bg-choice: #f0f0f0;
-  --teal-50: #ececec;
-  --teal-100: #e4e4e4;
-  --teal-600: #4a4a4a;
-  --teal-700: #2c2c2c;
-  --purple-50: #f0f0f0;
-  --purple-100: #dddddd;
-  --purple-700: #333333;
-}
-
-html.hard .deco,
-html.hard .brand-mark {
-  display: none;
-}
-
-html.hard:not(.contrast) .gov-bar {
-  background: #1a1a1a;
-}
-
-html.hard:not(.contrast) .site-header,
-html.hard:not(.contrast) .site-footer {
-  background: #2c2c2c;
-}
-
-html.hard .hero .accent {
-  color: inherit;
-}
-
-html.hard .badge {
-  background: #ececec;
-  color: #2c2c2c;
-}
-
-html.hard .bubble.user {
-  background: #ececec;
+html.scale-150 {
+  font-size: 24px;
 }
 
 body {
@@ -188,21 +149,29 @@ a {
   font-size: 16px;
 }
 
+.chrome .control,
+.chrome .nav-link,
+.chrome .brand {
+  padding: 8px 16px;
+  font-size: 14px;
+  min-height: 44px;
+  gap: 8px;
+}
+
 .gov-bar,
 .site-header {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: 12px;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem;
+  padding: 8px 16px;
   background: var(--teal-700);
   color: #e7f4f3;
   border-bottom: none;
 }
 
 .gov-bar {
-  padding: 0.5rem 1rem;
   font-size: 14px;
   background: #054b4c;
 }
@@ -211,6 +180,7 @@ a {
   flex-wrap: nowrap;
   overflow-x: auto;
   max-width: 100%;
+  gap: 8px;
 }
 
 .gov-bar p,
@@ -460,28 +430,6 @@ html.contrast .step-n.done {
   border-radius: 12px;
   background: var(--amber-50);
   color: var(--amber-900);
-}
-
-.hard-banner {
-  padding: 0.75rem 1rem;
-  background: #ececec;
-  color: #1a1a1a;
-  border-bottom: 1px solid #cccccc;
-  font-size: 1rem;
-}
-
-html.contrast .hard-banner {
-  background: #000;
-  color: #ffe600;
-  border-bottom: 2px solid #ffe600;
-}
-
-.hard-card {
-  margin-top: 1rem;
-  padding: 1.15rem;
-  border-radius: var(--radius-xl);
-  background: var(--purple-50);
-  border: 1px solid var(--purple-100);
 }
 
 .alert {

@@ -147,7 +147,6 @@ export type ProfileId = "guest" | "anna" | "piotr" | "kasia" | "custom";
 
 export type A11yState = {
   language: "plain" | "legal";
-  hardSituation: boolean;
   highContrast: boolean;
   fontScale: 100 | 125 | 150;
 };

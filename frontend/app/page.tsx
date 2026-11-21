@@ -26,17 +26,11 @@ export default function HomePage() {
 
   return (
     <AppShell>
-      {a11y.hardSituation ? null : <p className="badge">{COPY.badge}</p>}
+      <p className="badge">{COPY.badge}</p>
       <h1 className="hero mt-4">
-        {a11y.hardSituation ? (
-          COPY.hardHero
-        ) : (
-          <>
-            {COPY.heroTitle} <span className="accent">{COPY.heroAccent}</span>
-          </>
-        )}
+        {COPY.heroTitle} <span className="accent">{COPY.heroAccent}</span>
       </h1>
-      <p className="mt-4 max-w-2xl">{a11y.hardSituation ? COPY.hardLead : COPY.heroLead}</p>
+      <p className="mt-4 max-w-2xl">{COPY.heroLead}</p>
 
       <div className="chat-log mt-6" ref={liveRef} aria-live="polite">
         {chat.lines.map((line, index) => (
