@@ -198,4 +198,18 @@ QUERY_ALIASES = {
     "macierzynsk": ["swiadczenie_macierzynski"],
     "platnik": ["przepis_platnik_20", "status_duzy_platnik", "status_maly_platnik"],
     "zaleglos": ["ryzyko_zaleglosci_b2b", "status_zaleglosci_skladek"],
+    "nauczyciel": [
+        "status_umowa_o_prace",
+        "ryzyko_wyczekiwanie_30",
+        "zdarzenie_ciaza",
+        "dokument_zam",
+    ],
+    "naucyzciel": [
+        "status_umowa_o_prace",
+        "ryzyko_wyczekiwanie_30",
+        "zdarzenie_ciaza",
+        "dokument_zam",
+    ],
+    "szkol": ["status_umowa_o_prace", "status_duzy_platnik", "dokument_z3"],
+    "etat": ["status_umowa_o_prace", "ryzyko_wyczekiwanie_30"],
 }

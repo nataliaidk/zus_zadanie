@@ -37,14 +37,12 @@ export default function HomePage() {
           <article key={`${line.role}-${index}`} className={`bubble ${line.role}`}>
             <p className="eyebrow">{line.role === "user" ? "Ty" : "Przewodnik"}</p>
             <p className="whitespace-pre-wrap">{line.text}</p>
-            {line.citations?.length ? (
+            {line.citations?.length && a11y.language === "legal" ? (
               <ul className="mt-3 grid gap-2">
                 {line.citations.map((item) => (
                   <li key={item.node_id}>
                     <strong>{item.title}</strong>
-                    <span className="block text-sm">
-                      {a11y.language === "legal" ? item.legal_basis : item.plain_language}
-                    </span>
+                    <span className="block text-sm">{item.legal_basis}</span>
                   </li>
                 ))}
               </ul>
