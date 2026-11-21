@@ -59,22 +59,55 @@ html.contrast {
   --shadow-sm: none;
 }
 
-html.scale-125 {
+html.scale-125 main,
+html.scale-125 .site-footer {
   font-size: 125%;
 }
 
-html.scale-150 {
+html.scale-150 main,
+html.scale-150 .site-footer {
   font-size: 150%;
 }
 
-html.hard {
-  --bg-page: #f3f3f3;
-  --bg-sidebar: #ececec;
+html.hard:not(.contrast) {
+  --bg-page: #f2f2f2;
+  --bg-card: #ffffff;
+  --bg-sidebar: #f0f0f0;
+  --bg-choice: #f0f0f0;
   --teal-50: #ececec;
+  --teal-100: #e4e4e4;
+  --teal-600: #4a4a4a;
+  --teal-700: #2c2c2c;
+  --purple-50: #f0f0f0;
+  --purple-100: #dddddd;
+  --purple-700: #333333;
 }
 
-html.hard .deco {
+html.hard .deco,
+html.hard .brand-mark {
   display: none;
+}
+
+html.hard:not(.contrast) .gov-bar {
+  background: #1a1a1a;
+}
+
+html.hard:not(.contrast) .site-header,
+html.hard:not(.contrast) .site-footer {
+  background: #2c2c2c;
+}
+
+html.hard .hero .accent {
+  color: inherit;
+}
+
+html.hard .badge {
+  background: #ececec;
+  color: #2c2c2c;
+}
+
+html.hard .bubble.user {
+  background: #ececec;
 }
 
 body {
@@ -148,6 +181,13 @@ a {
   color: var(--teal-700);
 }
 
+.chrome {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  font-size: 16px;
+}
+
 .gov-bar,
 .site-header {
   display: flex;
@@ -163,8 +203,14 @@ a {
 
 .gov-bar {
   padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+  font-size: 14px;
   background: #054b4c;
+}
+
+.gov-bar .chip-row {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .gov-bar p,
@@ -414,6 +460,20 @@ html.contrast .step-n.done {
   border-radius: 12px;
   background: var(--amber-50);
   color: var(--amber-900);
+}
+
+.hard-banner {
+  padding: 0.75rem 1rem;
+  background: #ececec;
+  color: #1a1a1a;
+  border-bottom: 1px solid #cccccc;
+  font-size: 1rem;
+}
+
+html.contrast .hard-banner {
+  background: #000;
+  color: #ffe600;
+  border-bottom: 2px solid #ffe600;
 }
 
 .hard-card {

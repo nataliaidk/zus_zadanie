@@ -35,9 +35,10 @@ export function AppShell({
       <a href="#tresc" className="skip-link control border bg-[var(--bg-card)] p-4">
         Przejdź do treści
       </a>
+      <div className="chrome">
       <div className="gov-bar">
         <p>Wersja demonstracyjna · stan prawny listopad 2026</p>
-        <div className="chip-row">
+        <div className="chip-row" role="toolbar" aria-label="Ułatwienia">
           {([100, 125, 150] as const).map((scale) => (
             <button
               key={scale}
@@ -127,8 +128,20 @@ export function AppShell({
           </button>
         )}
       </header>
+      {a11y.hardSituation ? (
+        <p className="hard-banner" role="status">
+          {COPY.hardBanner}
+        </p>
+      ) : null}
+      </div>
       <p className="sr-only" aria-live="polite">
-        {loading ? "Liczenie zasiłku…" : error ? error : ""}
+        {loading
+          ? "Liczenie zasiłku…"
+          : error
+            ? error
+            : a11y.hardSituation
+              ? "Tryb trudna sytuacja włączony. Interfejs wyciszony."
+              : `Wielkość tekstu ${a11y.fontScale} procent.`}
       </p>
       {error ? (
         <p className="wrap alert" role="alert">
