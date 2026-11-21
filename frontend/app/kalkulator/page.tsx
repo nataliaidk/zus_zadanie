@@ -141,7 +141,7 @@ export default function KalkulatorPage() {
     try {
       const result = await calculate(next);
       applyResult(next, result);
-      setStatus("Policzono. Kwoty są z silnika, nie z czatu.");
+      setStatus("Policzono. Kwoty wynikają z przepisów (listopad 2026), nie z czatu.");
     } catch (err) {
       setStatus(err instanceof Error ? err.message : "Nie udało się policzyć.");
     }

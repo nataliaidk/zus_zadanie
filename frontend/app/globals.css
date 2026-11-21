@@ -89,6 +89,18 @@ body {
   outline-offset: 3px;
 }
 
+.gov-bar :focus-visible,
+.site-header :focus-visible,
+.site-footer :focus-visible {
+  outline-color: #fff;
+}
+
+html.contrast .gov-bar :focus-visible,
+html.contrast .site-header :focus-visible,
+html.contrast .site-footer :focus-visible {
+  outline-color: #ffe600;
+}
+
 .control {
   min-height: 44px;
   min-width: 44px;
@@ -144,38 +156,35 @@ a {
   align-items: center;
   justify-content: space-between;
   padding: 1rem;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--gray-100);
-}
-
-.gov-bar {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
   background: var(--teal-700);
   color: #e7f4f3;
   border-bottom: none;
 }
 
-.gov-bar p {
+.gov-bar {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  background: #054b4c;
+}
+
+.gov-bar p,
+.site-header p {
   color: inherit;
   margin: 0;
 }
 
-html.contrast .gov-bar {
+html.contrast .gov-bar,
+html.contrast .site-header {
   background: #000;
   color: #fff;
   border-bottom: 2px solid #ffe600;
-}
-
-.site-header {
-  padding: 1rem;
 }
 
 .brand {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  color: var(--teal-700);
+  color: #fff;
   text-decoration: none;
   min-height: 44px;
 }
@@ -208,15 +217,28 @@ html.contrast .brand-mark {
   min-height: 44px;
   padding: 0.5rem 1rem;
   border-radius: var(--radius-pill);
-  color: var(--gray-600);
+  color: #e7f4f3;
   text-decoration: none;
   font-weight: 500;
 }
 
-.nav-link[aria-current="page"] {
-  background: var(--teal-50);
+.site-header a.nav-link.control {
+  background: transparent;
+  border-color: transparent;
+  color: #e7f4f3;
+}
+
+.nav-link[aria-current="page"],
+.site-header a.nav-link.control[aria-current="page"] {
+  background: #fff;
   color: var(--teal-700);
   font-weight: 700;
+}
+
+html.contrast .nav-link[aria-current="page"],
+html.contrast .site-header a.nav-link.control[aria-current="page"] {
+  background: #ffe600;
+  color: #000;
 }
 
 .btn,
@@ -512,10 +534,25 @@ html.contrast .site-footer {
   padding: 0 1rem 2rem;
 }
 
-button.control.ghost {
+button.control.ghost,
+.site-header button.control:not(.btn-login):not(.btn-primary) {
   background: transparent;
   border-color: rgba(255, 255, 255, 0.35);
   color: inherit;
+}
+
+.btn-login,
+button.btn-login {
+  background: #fff;
+  border-color: #fff;
+  color: var(--teal-700);
+}
+
+html.contrast .btn-login,
+html.contrast button.btn-login {
+  background: #ffe600;
+  border-color: #ffe600;
+  color: #000;
 }
 
 .gov-bar button.control.ghost[aria-pressed="true"] {

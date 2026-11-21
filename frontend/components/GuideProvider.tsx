@@ -2,7 +2,12 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { calculate, explain as explainApi } from "@/lib/api";
-import { findAccountById, findAccountByLogin, type AuthUser } from "@/lib/auth";
+import {
+  findAccountByLogin,
+  findAccountByPesel,
+  type AuthUser,
+  type LoginMethod,
+} from "@/lib/auth";
 import { useParentPlan } from "@/hooks/useParentPlan";
 import type {
   A11yState,
@@ -15,8 +20,8 @@ import type {
 type GuideContextValue = {
   profileId: ProfileId;
   user: AuthUser | null;
-  loginPue: (login: string, password: string) => boolean;
-  loginMobywatel: (id: string) => boolean;
+  loginPassword: (login: string, password: string, method: LoginMethod) => boolean;
+  loginMobywatel: (pesel: string, password: string) => boolean;
   logout: () => void;
   profile: ParentProfile | null;
   calculation: CalculationResult | null;
@@ -74,15 +79,15 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const loginPue = useCallback(
-    (login: string, password: string) => {
+  const loginPassword = useCallback(
+    (login: string, password: string, method: LoginMethod) => {
       const account = findAccountByLogin(login, password);
       if (!account) return false;
       setUser({
         id: account.id,
         displayName: account.displayName,
         peselMasked: account.peselMasked,
-        method: "pue",
+        method,
       });
       setProfileId(account.id);
       void loadProfile(account.profile);
@@ -92,8 +97,8 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   );
 
   const loginMobywatel = useCallback(
-    (id: string) => {
-      const account = findAccountById(id);
+    (pesel: string, password: string) => {
+      const account = findAccountByPesel(pesel, password);
       if (!account) return false;
       setUser({
         id: account.id,
@@ -133,7 +138,7 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
     () => ({
       profileId,
       user,
-      loginPue,
+      loginPassword,
       loginMobywatel,
       logout,
       profile,
@@ -155,7 +160,7 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
       explanation,
       loading,
       loginMobywatel,
-      loginPue,
+      loginPassword,
       plan,
       profile,
       profileId,

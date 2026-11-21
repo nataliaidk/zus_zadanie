@@ -14,13 +14,31 @@ def _no_graph_jargon(text: str | None) -> None:
 def test_chat_starts_with_guidance_not_children_quiz(params):
     chat = ChatService(GraphService(), params)
     start = chat.handle(ChatRequest(action="start"))
-    assert start.mode == "question"
-    assert start.buttons
+    blob = f"{start.question or ''} {start.helper or ''} {start.answer or ''}".lower()
+    assert [item.id for item in start.buttons] == [
+        "ciaza",
+        "porod",
+        "wniosek",
+        "zlecenie",
+        "b2b",
+        "ojciec",
+    ]
     assert start.answer
-    assert "dzieci" not in (start.question or "").lower()
-    assert "Ile dzieci" not in (start.answer or "")
+    assert "ile dzieci" not in blob
     assert GREETING[:20] in (start.answer or "")
     _no_graph_jargon(start.answer)
+
+    response = chat.handle(
+        ChatRequest(
+            session_id=start.session_id,
+            action="question",
+            message="Jaki wniosek ZAM złożyć po urodzeniu dziecka?",
+        )
+    )
+    assert response.mode == "question"
+    assert response.citations
+    assert any("ZAM" in item.plain_language or "ZAM" in item.title for item in response.citations)
+    _no_graph_jargon(response.answer)
 
 
 def test_open_question_uses_graph_quietly(params):

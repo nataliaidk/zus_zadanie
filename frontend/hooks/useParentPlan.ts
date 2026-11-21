@@ -166,7 +166,7 @@ export function useParentPlan(calculation: CalculationResult | null, profile: Pa
     {
       label: "Pula rodzicielska",
       weeks: parentalTotal,
-      note: `Z silnika (${parentalTotal} / 43 / 65 / 67)`,
+      note: `Z przepisów (${parentalTotal} / 43 / 65 / 67)`,
     },
     {
       label: "Zużyte przy 1/2 etatu",

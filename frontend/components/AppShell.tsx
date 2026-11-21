@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { COPY, LINKS } from "@/lib/copy";
+import { methodLabel } from "@/lib/auth";
 import { LoginDialog } from "./LoginDialog";
 import { useGuide } from "./GuideProvider";
 
@@ -113,7 +114,7 @@ export function AppShell({
               <span className="sr-only">Zalogowano: </span>
               <strong>{user.displayName}</strong>
               <span className="block text-sm font-normal">
-                {user.method === "pue" ? "PUE ZUS" : "mObywatel"} · PESEL {user.peselMasked}
+                {methodLabel(user.method)} · PESEL {user.peselMasked}
               </span>
             </p>
             <button type="button" className="control" onClick={logout}>
@@ -121,7 +122,7 @@ export function AppShell({
             </button>
           </div>
         ) : (
-          <button type="button" className="btn-primary control" onClick={() => setLoginOpen(true)}>
+          <button type="button" className="btn-login control" onClick={() => setLoginOpen(true)}>
             Zaloguj się
           </button>
         )}
@@ -170,6 +171,8 @@ export function AppShell({
               </a>
             </p>
             <p className="mt-4">
+              <Link href="/ryzyka">Ryzyka</Link>
+              {" · "}
               <Link href="/juror">Dla jurorów</Link>
               {" · "}
               <Link href="/admin">Admin</Link>

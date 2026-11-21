@@ -18,8 +18,8 @@ from app.services.sim_service import simulate
 app = FastAPI(
     title="Zasiłkowy Przewodnik Przyszłego Rodzica",
     description=(
-        "Deterministyczny silnik zasiłkowy i graf wiedzy (stan prawny: listopad 2026). "
-        "LLM tylko do parsowania PDF i brzmienia odpowiedzi z podgrafu — nigdy do kwot."
+        "Urlopy i zasiłki dla rodziców (stan prawny: listopad 2026). "
+        "Kwoty liczy kod, nie model językowy."
     ),
     version="0.3.0",
 )

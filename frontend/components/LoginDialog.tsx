@@ -5,10 +5,11 @@ import { DEMO_ACCOUNTS, type LoginMethod } from "@/lib/auth";
 import { useGuide } from "./GuideProvider";
 
 export function LoginDialog({ onClose }: { onClose: () => void }) {
-  const { loginPue, loginMobywatel } = useGuide();
+  const { loginPassword, loginMobywatel } = useGuide();
   const titleId = useId();
   const [tab, setTab] = useState<LoginMethod>("pue");
   const [login, setLogin] = useState("");
+  const [pesel, setPesel] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -20,18 +21,34 @@ export function LoginDialog({ onClose }: { onClose: () => void }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
+  function fail() {
+    setError("Nie udało się zalogować. Sprawdź dane demonstracyjne poniżej — to nie jest prawdziwy ZUS.");
+  }
+
   function onPue(event: FormEvent) {
     event.preventDefault();
-    const ok = loginPue(login, password);
-    if (!ok) {
-      setError("Nieprawidłowy login albo hasło. Sprawdź dane demonstracyjne poniżej.");
+    if (!loginPassword(login, password, "pue")) {
+      fail();
       return;
     }
     onClose();
   }
 
-  function onMobywatel(id: string) {
-    loginMobywatel(id);
+  function onPz(event: FormEvent) {
+    event.preventDefault();
+    if (!loginPassword(login, password, "pz")) {
+      fail();
+      return;
+    }
+    onClose();
+  }
+
+  function onMobywatel(event: FormEvent) {
+    event.preventDefault();
+    if (!loginMobywatel(pesel, password)) {
+      fail();
+      return;
+    }
     onClose();
   }
 
@@ -47,14 +64,14 @@ export function LoginDialog({ onClose }: { onClose: () => void }) {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="eyebrow">Logowanie</p>
-            <h2 id={titleId}>Zaloguj się do konta</h2>
+            <h2 id={titleId}>Zaloguj się</h2>
           </div>
           <button type="button" className="control" onClick={onClose}>
             Zamknij
           </button>
         </div>
         <p className="mt-2 text-sm">
-          To konto demonstracyjne na potrzeby konkursu. Nic nie idzie do prawdziwego ZUS ani mObywatela.
+          Wersja konkursowa. Logowanie nic nie wysyła do ZUS, mObywatela ani Profilu zaufanego.
         </p>
         <div className="chip-row mt-4" role="tablist" aria-label="Sposób logowania">
           <button
@@ -63,7 +80,10 @@ export function LoginDialog({ onClose }: { onClose: () => void }) {
             className="control"
             aria-selected={tab === "pue"}
             aria-pressed={tab === "pue"}
-            onClick={() => setTab("pue")}
+            onClick={() => {
+              setTab("pue");
+              setError(null);
+            }}
           >
             PUE ZUS
           </button>
@@ -73,11 +93,28 @@ export function LoginDialog({ onClose }: { onClose: () => void }) {
             className="control"
             aria-selected={tab === "mobywatel"}
             aria-pressed={tab === "mobywatel"}
-            onClick={() => setTab("mobywatel")}
+            onClick={() => {
+              setTab("mobywatel");
+              setError(null);
+            }}
           >
             mObywatel
           </button>
+          <button
+            type="button"
+            role="tab"
+            className="control"
+            aria-selected={tab === "pz"}
+            aria-pressed={tab === "pz"}
+            onClick={() => {
+              setTab("pz");
+              setError(null);
+            }}
+          >
+            Profil zaufany
+          </button>
         </div>
+
         {tab === "pue" ? (
           <form className="mt-4 grid gap-4" onSubmit={onPue}>
             <label className="grid gap-2">
@@ -105,34 +142,85 @@ export function LoginDialog({ onClose }: { onClose: () => void }) {
               </p>
             ) : null}
             <button type="submit" className="btn-primary control">
-              Zaloguj
+              Zaloguj przez PUE
             </button>
           </form>
-        ) : (
-          <div className="mt-4 grid gap-3">
-            <p>Wybierz konto, którym chcesz się zalogować (symulacja mObywatel).</p>
-            {DEMO_ACCOUNTS.map((account) => (
-              <button
-                key={account.id}
-                type="button"
-                className="choice control"
-                onClick={() => onMobywatel(account.id)}
-              >
-                <span>
-                  <strong className="block">{account.displayName}</strong>
-                  <span className="block text-sm font-normal">PESEL {account.peselMasked}</span>
-                </span>
-              </button>
-            ))}
-          </div>
-        )}
+        ) : null}
+
+        {tab === "pz" ? (
+          <form className="mt-4 grid gap-4" onSubmit={onPz}>
+            <p>Profil zaufany — podaj login i hasło, tak jak na login.gov.pl.</p>
+            <label className="grid gap-2">
+              Login
+              <input
+                className="control"
+                autoComplete="username"
+                value={login}
+                onChange={(event) => setLogin(event.target.value)}
+              />
+            </label>
+            <label className="grid gap-2">
+              Hasło
+              <input
+                className="control"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </label>
+            {error ? (
+              <p className="alert" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <button type="submit" className="btn-primary control">
+              Zaloguj przez Profil zaufany
+            </button>
+          </form>
+        ) : null}
+
+        {tab === "mobywatel" ? (
+          <form className="mt-4 grid gap-4" onSubmit={onMobywatel}>
+            <p>Aplikacja mObywatel — wpisz PESEL i kod z aplikacji.</p>
+            <label className="grid gap-2">
+              PESEL
+              <input
+                className="control"
+                inputMode="numeric"
+                autoComplete="off"
+                value={pesel}
+                onChange={(event) => setPesel(event.target.value)}
+              />
+            </label>
+            <label className="grid gap-2">
+              Kod z aplikacji
+              <input
+                className="control"
+                type="password"
+                autoComplete="one-time-code"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+            </label>
+            {error ? (
+              <p className="alert" role="alert">
+                {error}
+              </p>
+            ) : null}
+            <button type="submit" className="btn-primary control">
+              Potwierdź w mObywatel
+            </button>
+          </form>
+        ) : null}
+
         <details className="mt-4">
           <summary className="control">Dane demonstracyjne (dla jurorów)</summary>
           <ul className="mt-3 grid gap-2 text-sm">
             {DEMO_ACCOUNTS.map((account) => (
               <li key={account.id}>
-                {account.displayName}: login <code>{account.login}</code>, hasło{" "}
-                <code>{account.password}</code>
+                {account.displayName}, PESEL {account.peselMasked}: login{" "}
+                <code>{account.login}</code>, hasło / kod <code>{account.password}</code>
               </li>
             ))}
           </ul>

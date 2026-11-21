@@ -33,7 +33,7 @@ export default function JurorPage() {
     try {
       const body = await calculateSample(id);
       applyBody(body, "Policzono sprawę testową.");
-      setStatus(`Sprawa ${id}. Parser / profil. Kwoty z silnika.`);
+      setStatus(`Sprawa ${id}. Parser / profil. Kwoty z przepisów.`);
     } catch (err) {
       setStatus(err instanceof Error ? err.message : "Nie policzono sprawy.");
     }

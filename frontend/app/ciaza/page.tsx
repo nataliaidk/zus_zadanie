@@ -14,10 +14,10 @@ export default function CiazaPage() {
       <h1>Ciąża — choroba, rehab, macierzyński po utracie pracy</h1>
       <p className="mt-2">
         Kod B to 100% podstawy, maksymalnie 270 dni. Wyczekiwanie: 30 dni na etacie, 90 na zleceniu i
-        JDG. Wybierz profil albo policz w kalkulatorze.
+        JDG. Zaloguj się albo policz w kalkulatorze.
       </p>
       {!items.length ? (
-        <p className="note mt-4">Najpierw policz profil (belka albo kalkulator).</p>
+        <p className="note mt-4">Najpierw zaloguj się albo policz w kalkulatorze.</p>
       ) : null}
       <div className="mt-4 grid gap-4" aria-live="polite">
         {items.map((item) => (

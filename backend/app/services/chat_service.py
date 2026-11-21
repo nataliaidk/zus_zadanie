@@ -17,11 +17,11 @@ GREETING = (
 )
 
 TOPICS: list[ChatButton] = [
-    ChatButton(id="ciaza", label="Jestem w ciąży"),
+    ChatButton(id="ciaza", label="Ciąża"),
     ChatButton(id="porod", label="Urodziło się dziecko"),
-    ChatButton(id="wniosek", label="Jaki wniosek złożyć?"),
-    ChatButton(id="zlecenie", label="Pracuję na zleceniu"),
-    ChatButton(id="b2b", label="Prowadzę firmę / B2B"),
+    ChatButton(id="wniosek", label="Jaki wniosek"),
+    ChatButton(id="zlecenie", label="Zlecenie"),
+    ChatButton(id="b2b", label="B2B"),
     ChatButton(id="ojciec", label="Urlop ojcowski"),
 ]
 
