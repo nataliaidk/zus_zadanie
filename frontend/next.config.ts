@@ -4,6 +4,7 @@ const backend = process.env.BACKEND_URL ?? "http://127.0.0.1:8000";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1", "localhost"],
+  devIndicators: false,
   async rewrites() {
     return [
       {

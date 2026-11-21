@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zasiłkowy Przewodnik — 10 slajdów</title>
+  <style>
+    :root {
+      --teal: #0d7377;
+      --teal-dark: #075e5f;
+      --bg: #f6f4ef;
+      --card: #fff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --mint: #eef7f4;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; background: var(--bg); color: var(--ink); font: 20px/1.45 "Source Sans 3", system-ui, sans-serif; }
+    .deck { max-width: 1100px; margin: 0 auto; padding: 1rem; }
+    header.bar { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: space-between; align-items: center; }
+    .dots { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+    .dots button {
+      min-width: 44px; min-height: 44px; border: 1px solid #e5e7eb; border-radius: 999px;
+      background: #fff; font-weight: 700; cursor: pointer;
+    }
+    .dots button[aria-current="true"] { background: var(--teal); color: #fff; border-color: var(--teal); }
+    .navbtns button, .skip {
+      min-height: 44px; min-width: 44px; padding: 0.5rem 1rem; border-radius: 999px;
+      border: 1px solid #e5e7eb; background: #fff; font-weight: 600; cursor: pointer;
+    }
+    .skip { position: absolute; left: -999px; }
+    .skip:focus { left: 1rem; top: 1rem; z-index: 20; }
+    .slide {
+      display: none; background: var(--card); border-radius: 24px; padding: 1.5rem 1.75rem;
+      margin-top: 1rem; min-height: 70vh; border: 1px solid #e5e7eb;
+    }
+    .slide.on { display: block; }
+    h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.03em; margin: 0.3rem 0 0.6rem; }
+    h1 span { color: var(--teal-dark); }
+    h2 { margin: 0 0 0.75rem; font-size: 1.6rem; }
+    .eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.75rem; font-weight: 700; color: var(--teal-dark); }
+    p, li { color: var(--muted); }
+    strong { color: var(--ink); }
+    ul { padding-left: 1.2rem; }
+    .grid { display: grid; gap: 1rem; }
+    @media (min-width: 800px) { .grid.two { grid-template-columns: 1.1fr 0.9fr; } }
+    img { width: 100%; border-radius: 16px; border: 1px solid #e5e7eb; }
+    .badge { display: inline-block; background: var(--mint); color: var(--teal-dark); border-radius: 999px; padding: 0.25rem 0.8rem; font-size: 0.85rem; font-weight: 700; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #e5e7eb; padding: 0.7rem 0.85rem; text-align: left; }
+    th { background: var(--mint); color: var(--teal-dark); }
+    .warn { background: #fef3c7; color: #78350f; padding: 0.85rem 1rem; border-radius: 12px; }
+    footer { margin: 1rem 0 2rem; color: var(--muted); font-size: 0.9rem; }
+    @page { size: landscape; margin: 12mm; }
+    @media print {
+      header.bar, footer, .skip { display: none !important; }
+      .slide { display: block !important; page-break-after: always; min-height: auto; box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#slajd">Przejdź do slajdu</a>
+  <div class="deck">
+    <header class="bar">
+      <p class="eyebrow">HackNation ZUS · listopad 2026 · 10 slajdów</p>
+      <div class="navbtns">
+        <button type="button" id="prev" aria-label="Poprzedni slajd">Wstecz</button>
+        <button type="button" id="next" aria-label="Następny slajd">Dalej</button>
+      </div>
+    </header>
+    <nav class="dots" id="dots" aria-label="Slajdy"></nav>
+    <main id="slajd">
+
+      <section class="slide on" data-title="Tytuł">
+        <p class="badge">Stan prawny: listopad 2026 · to nie jest prawdziwy ZUS</p>
+        <h1>Zasiłkowy przewodnik <span>przyszłego rodzica</span></h1>
+        <p>Spokojnie. Ułóżmy plan urlopów: co przysługuje, ile to jest w złotych, jaki wniosek złożyć i komu — pracodawcy albo ZUS.</p>
+        <ul>
+          <li>Jedna decyzja na krok, prosty język, dostępność WCAG 2.1/2.2 AA+.</li>
+          <li>Od 24.10.2026 jeden wniosek <strong>ZAM</strong> (nie ZUR, ZAO, Z-3b).</li>
+          <li>Kwoty liczy silnik Python — nie czat.</li>
+        </ul>
+      </section>
+
+      <section class="slide" data-title="Architektura">
+        <p class="eyebrow">Slajd 2</p>
+        <h2>Architektura: silnik oddzielony od słów</h2>
+        <div class="grid two">
+          <div>
+            <ul>
+              <li><strong>Frontend:</strong> Next.js, TypeScript, Tailwind.</li>
+              <li><strong>Backend:</strong> FastAPI + Pydantic + NetworkX.</li>
+              <li><strong>REST</strong> JSON: <code>/api/calculate</code>, <code>/api/pdf/calculate</code>, <code>/api/chat</code>.</li>
+              <li>Graf wiedzy: każdy węzeł ma <code>plain_language</code> i <code>legal_basis</code>.</li>
+            </ul>
+          </div>
+          <table>
+            <caption>Kto za co odpowiada</caption>
+            <thead><tr><th>Zadanie</th><th>Warstwa</th></tr></thead>
+            <tbody>
+              <tr><td>Wymiar, stawka, złote</td><td>Python</td></tr>
+              <tr><td>Pola z PDF</td><td>Regex (+ LLM opcjonalnie)</td></tr>
+              <tr><td>Brzmienie czatu</td><td>LLM + GraphRAG</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Kalkulator 1">
+        <p class="eyebrow">Slajd 3 · brief a, b, f</p>
+        <h2>Kalkulator: wymiar i kwota dla obojga rodziców</h2>
+        <p>Liczba dzieci, Za życiem, podstawa z PDF albo wpisana ręcznie. Profil Anna: 20 tyg. i 19 507,48 zł z podstawy 5200 zł.</p>
+        <img src="screens/desktop-home-anna.png" alt="Start: profil Anna, karta planu z wymiarami i kwotami w złotych" />
+      </section>
+
+      <section class="slide" data-title="Kalkulator 2">
+        <p class="eyebrow">Slajd 4 · brief c, d, e, j</p>
+        <h2>Adopcja, ½ etatu, oboje rodzice</h2>
+        <p>Jedna strona z opcjami: adopcja / zastępcza, łączenie z pracą (kalendarz się wydłuża), urlop razem. Poka-yoke: pierwsze 14 tygodni zostają przy matce.</p>
+        <img src="screens/desktop-kalkulator.png" alt="Kalkulator: adopcja, Za życiem, tabela wymiaru i kwot" />
+      </section>
+
+      <section class="slide" data-title="Ciąża">
+        <p class="eyebrow">Slajd 5 · brief a</p>
+        <h2>Ciąża: kod B, rehab, brak uprawnień</h2>
+        <p>100% przez max 270 dni (kod B). Wyczekiwanie 30 / 90 dni. Są też ścieżki bez prawa do zasiłku — aplikacja to mówi wprost.</p>
+        <img src="screens/desktop-ciaza.png" alt="Ekran Ciąża: zasiłek chorobowy kod B przysługuje albo nie" />
+      </section>
+
+      <section class="slide" data-title="Dokumenty">
+        <p class="eyebrow">Slajd 6 · brief g</p>
+        <h2>ZAM, terminy, pracodawca albo ZUS</h2>
+        <p>Jeden wniosek ZAM. Płatnik powyżej 20 osób wypłaca sam. Mniejszy — Z-3 / Z-3a do ZUS. 21 dni na stawkę 81,5%.</p>
+        <img src="screens/desktop-dokumenty.png" alt="Dokumenty i terminy: ZAM zamiast ZUR ZAO Z-3b" />
+      </section>
+
+      <section class="slide" data-title="Symulacje">
+        <p class="eyebrow">Slajd 7 · brief usługi</p>
+        <h2>Usługi — tylko SYMULACJA</h2>
+        <p class="warn">Nic nie idzie do prawdziwego ZUS, mObywatela ani PUE. Baner jest zawsze widoczny.</p>
+        <p>mObywatel, ubezpieczenie, zaległości JDG, e-ZLA, PUE, wniosek ZAM, odpis aktu (RSC). Linki: zus.pl, MRPiPS, PIP.</p>
+        <img src="screens/desktop-uslugi.png" alt="Usługi z banerem SYMULACJA i wynikiem logowania mObywatel" />
+      </section>
+
+      <section class="slide" data-title="Wsparcie">
+        <p class="eyebrow">Slajd 8 · brief i + h</p>
+        <h2>Wsparcie i ryzyka</h2>
+        <p>Fundacje przy stracie, wcześniaku, poronieniu, ciężko chorym dziecku. Tryb „Trudna sytuacja” wycisza interfejs. Radar ryzyk opisuje status słowem, nie samym kolorem.</p>
+        <img src="screens/desktop-wsparcie.png" alt="Lista organizacji pomocowych z filtrem sytuacji" />
+      </section>
+
+      <section class="slide" data-title="RWD">
+        <p class="eyebrow">Slajd 9</p>
+        <h2>Dostępność i RWD</h2>
+        <div class="grid two">
+          <img src="screens/mobile-home.png" alt="Widok mobilny strony startowej, nawigacja w kilku rzędach" />
+          <ul>
+            <li>Układ składa się na telefonie (390 px sprawdzone).</li>
+            <li>Klawiatura, <code>:focus-visible</code>, cele 44×44 px, <code>aria-live</code>.</li>
+            <li>Czcionka 100 / 125 / 150%, wysoki kontrast, prosty język vs podstawa prawna.</li>
+            <li>Tabele jako odpowiednik osi urlopów.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="slide" data-title="AI i wdrożenie">
+        <p class="eyebrow">Slajd 10</p>
+        <h2>AI tylko tam, gdzie wolno · potencjał wdrożenia</h2>
+        <ul>
+          <li><strong>Nie liczy zasiłku.</strong> Kwoty = <code>rule_engine.py</code>.</li>
+          <li>PDF: regex zawsze; LLM tylko do pól, gdy jest klucz.</li>
+          <li>Czat: LLM formułuje zdania z podgrafu, bez wymyślania tygodni.</li>
+          <li>Admin: stawki i maksima w <code>params.json</code> (REST PUT) — zmiana prawa bez redeployu kodu.</li>
+          <li>Juror: <code>/juror</code> albo <code>GET /api/samples/{id}/pdf</code>.</li>
+        </ul>
+        <img src="screens/desktop-admin.png" alt="Panel admina: stawki procentowe i limity" />
+      </section>
+    </main>
+    <footer>
+      <p>Strzałki ← → albo przyciski. Drukuj do PDF: Ctrl+P. Repo: github.com/nataliaidk/zus_zadanie</p>
+    </footer>
+  </div>
+  <script>
+    const slides = [...document.querySelectorAll(".slide")];
+    const dots = document.getElementById("dots");
+    let i = 0;
+    slides.forEach((_, n) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = String(n + 1);
+      b.addEventListener("click", () => go(n));
+      dots.appendChild(b);
+    });
+    function go(n) {
+      i = (n + slides.length) % slides.length;
+      slides.forEach((s, k) => s.classList.toggle("on", k === i));
+      [...dots.children].forEach((b, k) => b.setAttribute("aria-current", k === i ? "true" : "false"));
+      document.getElementById("slajd").focus({ preventScroll: true });
+    }
+    document.getElementById("prev").onclick = () => go(i - 1);
+    document.getElementById("next").onclick = () => go(i + 1);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight" || e.key === "PageDown") go(i + 1);
+      if (e.key === "ArrowLeft" || e.key === "PageUp") go(i - 1);
+    });
+    go(0);
+  </script>
+</body>
+</html>
