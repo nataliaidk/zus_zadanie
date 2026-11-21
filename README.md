@@ -19,6 +19,10 @@ Otwórz **http://127.0.0.1:8000**
 
 Profil: Niezalogowany / Anna / Piotr / Kasia. Juror PDF: **/juror** albo `GET /api/samples/{id}/pdf`.
 
+## Wdrożenie publiczne (Vercel)
+
+Vercel = tylko frontend. API (Python) na Render/Fly z `Dockerfile`. Krok po kroku: [docs/wdrozenie-vercel.md](docs/wdrozenie-vercel.md).
+
 ## Materiały §4
 
 - Opis i AI: [docs/opis-projektu.md](docs/opis-projektu.md)
