@@ -108,6 +108,31 @@ def test_topic_button_hits_graph(params):
     _no_graph_jargon(response.answer)
 
 
+def test_duration_followup_is_20_and_41_not_legal_dump(params):
+    chat = ChatService(GraphService(), params)
+    start = chat.handle(ChatRequest(action="start"))
+    chat.handle(
+        ChatRequest(
+            session_id=start.session_id,
+            action="question",
+            message="jestem w 7 miesiacu ciazy; pracuej jako naucyzcielka w szkole i nie wiem od czego zacząć",
+        )
+    )
+    follow = chat.handle(
+        ChatRequest(
+            session_id=start.session_id,
+            action="question",
+            message="ile trwa urlop macierzynski i rodzicielski?",
+        )
+    )
+    answer = follow.answer or ""
+    assert "20" in answer
+    assert "41" in answer
+    assert "65" not in answer
+    assert "art." not in answer.lower()
+    _no_graph_jargon(answer)
+
+
 def test_followup_answers_l4_in_context(params):
     chat = ChatService(GraphService(), params)
     start = chat.handle(ChatRequest(action="start"))

@@ -12,8 +12,9 @@ from app.services import llm
 from app.services.graph_service import GraphService
 
 GREETING = (
-    "Cześć. Napisz, co się u Ciebie dzieje — na przykład: jestem w ciąży i uczę w szkole. "
-    "Powiem, od czego zacząć. Jeśli czegoś nie będę wiedziała, zapytam o jedną rzecz."
+    "Cześć. Jestem Przewodnikiem — powiedz, co się u Ciebie dzieje, zwyczajnym zdaniem. "
+    "Na przykład: jestem w siódmym miesiącu i uczę w szkole. "
+    "Odpowiem krótko. Jeśli czegoś brakuje, zapytam o jedną rzecz."
 )
 
 TOPICS: list[ChatButton] = [
@@ -224,7 +225,7 @@ class ChatService:
                 mode="question",
                 answer=(
                     "Żeby powiedzieć, od czego zacząć, potrzebuję jednej informacji: "
-                    "jak pracujesz? Od tego zależy, kto wypłaci zasiłek i ile wynosi wyczekiwanie."
+                    "jak pracujesz?"
                 ),
                 buttons=EMP_BUTTONS,
                 complete=False,
@@ -238,8 +239,9 @@ class ChatService:
             polished = llm.complete(
                 f"Sytuacja (kontekst): {facts}\nPytanie: {message}\n\nSzkic:\n{answer}",
                 system=(
-                    "Doradczyni zasiłkowa, polski, krótko. Nie dodawaj faktów, nie licz kwot. "
-                    "Nie wspominaj grafu. Nie pytaj o liczbę dzieci. "
+                    "Doradczyni zasiłkowa. Polski, ciepło, krótko. Jedno pytanie na raz. "
+                    "Plan najwyżej 4 krótkie punkty. Nie cytuj ustaw. Nie wspominaj grafu. "
+                    "Nie pytaj o liczbę dzieci. Nie licz złotówek. "
                     "Odmawiaj wysyłki wniosków, logowania do ZUS i fałszywych dokumentów."
                 ),
             )
@@ -307,22 +309,23 @@ class ChatService:
         focus = facts.get("focus")
         if focus == "zam" or any(token in folded for token in ("zur", "zao", "z-3b", "zam")):
             return (
-                "Składasz jeden wniosek ZAM. ZUR, ZAO i Z-3b od 24 października 2026 nie obowiązują. "
-                "Jeśli ZAM wpłynie w ciągu 21 dni od porodu, zasiłek za macierzyński i rodzicielski "
-                "wynosi 81,5% za całość. Później: 100% macierzyński i 70% rodzicielski."
+                "Składasz jeden wniosek ZAM — u pracodawcy albo na PUE. "
+                "Stare ZUR, ZAO i Z-3b już nie składaj. "
+                "Jeśli ZAM wpłynie w 21 dni od porodu, masz 81,5% za macierzyński i rodzicielski. "
+                "Później: 100% za macierzyński i 70% za rodzicielski."
             )
         if focus == "l4":
             wait = (
-                "30 dni (etat — w szkole zwykle już je masz)"
+                "Na etacie potrzeba 30 dni ubezpieczenia — w szkole zwykle już je masz."
                 if facts.get("employment") == "umowa_o_prace"
-                else "90 dni dobrowolnego chorobowego"
+                else "Na zleceniu albo na firmie trzeba 90 dni opłaconego chorobowego."
                 if facts.get("employment") in {"zlecenie", "b2b", "jdg"}
-                else "30 dni na etacie albo 90 na zleceniu/JDG"
+                else "Na etacie 30 dni ubezpieczenia, na zleceniu albo firmie 90."
             )
             return (
-                f"L4 w ciąży (e-ZLA, kod B) to zasiłek chorobowy 100% podstawy, maksymalnie 270 dni, "
-                f"po wyczekiwaniu: {wait}. Lekarz wystawia e-ZLA, nic nie nosisz do ZUS w papierze. "
-                "Ja zwolnienia nie wystawiam."
+                f"L4 w ciąży to 100% podstawy, maksymalnie 270 dni. {wait} "
+                "Lekarz wystawia e-ZLA (kod B) — Ty nic nie nosisz do ZUS. "
+                "Chcesz potem usłyszeć o wniosku ZAM?"
             )
         if focus == "payer":
             if facts.get("employment") == "umowa_o_prace":
@@ -348,9 +351,9 @@ class ChatService:
             )
         if focus == "duration":
             return (
-                "Przy jednym dziecku: macierzyński 20 tygodni (pierwsze 14 tylko dla matki), "
-                "rodzicielski 41 tygodni. Przy więcej dzieciach macierzyński 31–37 tygodni, rodzicielski 43. "
-                "Z zaświadczeniem „Za życiem”: 65 albo 67 tygodni rodzicielskiego."
+                "Przy jednym dziecku: 20 tygodni macierzyńskiego (pierwsze 14 tylko dla mamy), "
+                "potem 41 tygodni rodzicielskiego. Tata ma osobno 14 dni ojcowskiego. "
+                "Jeśli będzie więcej dzieci albo zaświadczenie „Za życiem” — daj znać, przeliczę wymiar."
             )
         if _wants_plan(folded, facts) and facts.get("employment"):
             if facts.get("topic") == "porod":
@@ -358,8 +361,13 @@ class ChatService:
             return self._plan_pregnancy(facts)
         if facts.get("topic") == "porod" and _wants_plan(folded, facts):
             return self._plan_birth(facts)
+        if facts.get("asked"):
+            return (
+                "Pamiętam, co już powiedziałaś. Napisz jedną rzecz: L4, wniosek ZAM, "
+                "kto wypłaci zasiłek, albo urlop taty."
+            )
         if citations:
-            return citations[0].plain_language + " Jeśli chcesz, zapytaj konkretnie: L4, ZAM albo kto płaci."
+            return citations[0].plain_language + " Mogę dopytać o L4, ZAM albo kto płaci — wybierz jedno."
         return "Napisz, czy jesteś w ciąży, po porodzie, czy pytasz o urlop taty — albo wybierz temat poniżej."
 
     def _plan_pregnancy(self, facts: dict[str, Any]) -> str:
@@ -368,13 +376,11 @@ class ChatService:
         when = f"w {month}. miesiącu ciąży" if month else "w ciąży"
         if emp == "umowa_o_prace":
             return (
-                f"Jesteś {when} i pracujesz na etacie. Plan od teraz:\n\n"
-                "1. Teraz — L4 w ciąży (kod B) to 100% po 30 dniach ubezpieczenia; w szkole zwykle już je masz.\n"
-                "2. Kto płaci — szkoła powyżej 20 ubezpieczonych sama; mniejsza daje Z-3 do ZUS.\n"
-                "3. Po porodzie, 21 dni — jeden wniosek ZAM (nie ZUR/ZAO). 21 dni = 81,5% za całość.\n"
-                "4. Urlopy przy jednym dziecku — 20 tyg. macierzyńskiego, potem 41 rodzicielskiego "
-                "(9 tyg. nieoddawalne dla każdego rodzica).\n\n"
-                "O co dopytać: L4, ZAM albo urlop taty?"
+                f"Jesteś {when} i pracujesz na etacie. Krótki plan:\n\n"
+                "1. Teraz — L4 w ciąży to 100% po 30 dniach ubezpieczenia; w szkole zwykle już je masz.\n"
+                "2. Po porodzie złóż ZAM w 21 dni (nie ZUR). Wtedy 81,5% za macierzyński i rodzicielski.\n"
+                "3. Przy jednym dziecku: 20 tygodni macierzyńskiego, potem 41 rodzicielskiego.\n\n"
+                "Chcesz najpierw o L4?"
             )
         if emp in {"zlecenie", "b2b", "jdg"}:
             wait = "90 dni dobrowolnego chorobowego"

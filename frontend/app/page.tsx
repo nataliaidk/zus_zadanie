@@ -3,11 +3,46 @@
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/AppShell";
 import { useGuide } from "@/components/GuideProvider";
-import { useGuidedChat } from "@/hooks/useGuidedChat";
+import { useGuidedChat, type ChatLine } from "@/hooks/useGuidedChat";
 import { COPY } from "@/lib/copy";
 
-export default function HomePage() {
+function ChatBubble({ line }: { line: ChatLine }) {
   const { a11y } = useGuide();
+  const [legalOpen, setLegalOpen] = useState(false);
+  const showLegal = a11y.language === "legal" || legalOpen;
+  const hasLaw = Boolean(line.citations?.length) && line.role === "assistant";
+
+  return (
+    <article className={`bubble ${line.role}`}>
+      <p className="eyebrow">{line.role === "user" ? "Ty" : "Przewodnik"}</p>
+      <p className="whitespace-pre-wrap">{line.text}</p>
+      {hasLaw ? (
+        <div className="mt-3 grid gap-2">
+          <button
+            type="button"
+            className="control"
+            aria-expanded={showLegal}
+            onClick={() => setLegalOpen((open) => !open)}
+          >
+            Podstawa prawna
+          </button>
+          {showLegal ? (
+            <ul className="grid gap-2">
+              {line.citations?.map((item) => (
+                <li key={item.node_id}>
+                  <strong>{item.title}</strong>
+                  <span className="block text-sm">{item.legal_basis}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+    </article>
+  );
+}
+
+export default function HomePage() {
   const chat = useGuidedChat();
   const [message, setMessage] = useState("");
   const liveRef = useRef<HTMLDivElement>(null);
@@ -34,20 +69,7 @@ export default function HomePage() {
 
       <div className="chat-log mt-6" ref={liveRef} aria-live="polite">
         {chat.lines.map((line, index) => (
-          <article key={`${line.role}-${index}`} className={`bubble ${line.role}`}>
-            <p className="eyebrow">{line.role === "user" ? "Ty" : "Przewodnik"}</p>
-            <p className="whitespace-pre-wrap">{line.text}</p>
-            {line.citations?.length && a11y.language === "legal" ? (
-              <ul className="mt-3 grid gap-2">
-                {line.citations.map((item) => (
-                  <li key={item.node_id}>
-                    <strong>{item.title}</strong>
-                    <span className="block text-sm">{item.legal_basis}</span>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </article>
+          <ChatBubble key={`${line.role}-${index}`} line={line} />
         ))}
         {chat.loading ? <p>Chwila, sprawdzam przepisy…</p> : null}
         {chat.error ? (
