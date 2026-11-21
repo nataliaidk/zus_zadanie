@@ -76,7 +76,7 @@ async def api_pdf_calculate(file: UploadFile = File(...)):
         raise HTTPException(status_code=413, detail="PDF jest za duży (maks. 10 MB).")
     if not data:
         raise HTTPException(status_code=400, detail="Pusty plik.")
-    return parse_and_calculate(data, params_service.get())
+    return parse_and_calculate(data, params_service.get(), source_name=file.filename)
 
 
 @app.post("/api/chat")

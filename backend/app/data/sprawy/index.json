@@ -1,0 +1,154 @@
+[
+  {
+    "id": "sprawa-wa-05",
+    "filename": "Agnieszka_Wa_05_zas._mac.___czenie_urlopu_rodzicielskiego_z_prac__f573.pdf",
+    "sha256": "8498706eabc8f0584519aac9b713985f0ed58438485d0ebe451e485d4fc2f8d0",
+    "title": "Agnieszka Wa. — rodzicielski łączony z pracą",
+    "document": "ZAM",
+    "document_type": "zam",
+    "kind": "sprawa",
+    "outcome": "Urlop rodzicielski można łączyć z pracą do ½ etatu — wtedy kalendarz urlopu się wydłuża. Zasiłek liczy silnik, nie skan.",
+    "overlay": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": false,
+      "birth_date": "2026-03-15",
+      "number_of_children": 1,
+      "benefit_base_pln": 5200,
+      "request_days_after_birth": 10,
+      "combine_work_fraction": 0.5,
+      "parental_together": true
+    }
+  },
+  {
+    "id": "sprawa-war-02",
+    "filename": "Agnieszka_War_02_zas._macierzy_ski_-_przyj_cie_dziecka_na_wychowanie_f04b.pdf",
+    "sha256": "4cac2bae72af6a09c58e132ca87d18b8c7a1a7b10f2cba38b821b8e388247605",
+    "title": "Agnieszka War. — przyjęcie dziecka na wychowanie",
+    "document": "ZAM",
+    "document_type": "zam",
+    "kind": "sprawa",
+    "outcome": "Urlop na warunkach macierzyńskiego (rodzina zastępcza niezawodowa / przysposobienie). Wiek dziecka poniżej limitu.",
+    "overlay": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": false,
+      "birth_date": "2024-06-01",
+      "number_of_children": 1,
+      "benefit_base_pln": 4500,
+      "request_days_after_birth": 0,
+      "family_path": "foster",
+      "child_age_years": 2
+    }
+  },
+  {
+    "id": "sprawa-ta-2",
+    "filename": "Alicja_Ta_2_zasi_ek_chorobowy_i_macierzy_ski_f373.pdf",
+    "sha256": "9758bb8e6cf5396b29f54530dcc5f73deda4c10cf3624979691d626b8c1f9f83",
+    "title": "Alicja Ta. — chorobowy i macierzyński",
+    "document": "ZAM",
+    "document_type": "zam",
+    "kind": "sprawa",
+    "outcome": "Zasiłek chorobowy w ciąży (kod B, 100%, max 270 dni), potem urlop i zasiłek macierzyński.",
+    "overlay": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": false,
+      "birth_date": "2026-03-15",
+      "number_of_children": 1,
+      "benefit_base_pln": 5200,
+      "request_days_after_birth": 10,
+      "rehab_after_sickness": true
+    }
+  },
+  {
+    "id": "sprawa-ko-4",
+    "filename": "Anna_Ko_4_zas._chorobowy_w_ci__y_55ad.pdf",
+    "sha256": "7451a508719b24d08559214c5fa27cc00a253515f98aa7a6afcb335a70d27a11",
+    "title": "Anna Ko. — chorobowy w ciąży",
+    "document": "ZAS-53",
+    "document_type": "zas53",
+    "kind": "sprawa",
+    "outcome": "Zasiłek chorobowy w ciąży: kod B, 100% podstawy, maksymalnie 270 dni.",
+    "overlay": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": false,
+      "birth_date": "2026-08-01",
+      "number_of_children": 1,
+      "benefit_base_pln": 5200,
+      "request_days_after_birth": 10
+    }
+  },
+  {
+    "id": "sprawa-lu-2",
+    "filename": "Anna_Lu_2_zas._mac._za_okres_urlopu_macierzy_skiego__uzupe_niaj_cego_url._mac.__rodzicielskiego_2a3f.pdf",
+    "sha256": "4f8286ac5320305915136c643015bf4c62c47674ccd898571e0e0a40fcc10324",
+    "title": "Anna Lu. — macierzyński, uzupełniający i rodzicielski",
+    "document": "ZAM",
+    "document_type": "zam",
+    "kind": "sprawa",
+    "outcome": "Po macierzyńskim uzupełniający urlop (hospitalizacja / wcześniak, 100%), potem rodzicielski.",
+    "overlay": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": false,
+      "birth_date": "2025-02-11",
+      "number_of_children": 1,
+      "benefit_base_pln": 5200,
+      "request_days_after_birth": 5,
+      "preterm": true
+    }
+  },
+  {
+    "id": "sprawa-no-3",
+    "filename": "Anna_No_3_zas._chorobowy_i_macierzy_ski_19e6.pdf",
+    "sha256": "1b7699888c19497c380ee5347e6f2de4bb6abec8ec38cfb838f8dc5fd57d8e29",
+    "title": "Anna No. — chorobowy i macierzyński",
+    "document": "ZAM",
+    "document_type": "zam",
+    "kind": "sprawa",
+    "outcome": "Chorobowe w ciąży (kod B), potem macierzyński. Kwoty z przepisów, nie z OCR.",
+    "overlay": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": false,
+      "birth_date": "2026-03-15",
+      "number_of_children": 1,
+      "benefit_base_pln": 4800,
+      "request_days_after_birth": 10
+    }
+  },
+  {
+    "id": "sprawa-war-01",
+    "filename": "Anna_War_01_zas._macierzy_ski__martwe_urodzenie_0703.pdf",
+    "sha256": "1a53dd703904345c728ca7c21600eacd1a8f07848ca52876ca3b1e5ab120e140",
+    "title": "Anna War. — martwe urodzenie",
+    "document": "ZAM",
+    "document_type": "zam",
+    "kind": "sprawa",
+    "outcome": "Przy martwym urodzeniu urlop macierzyński wynosi 8 tygodni (zasiłek 100%).",
+    "overlay": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": false,
+      "birth_date": "2026-03-15",
+      "number_of_children": 1,
+      "benefit_base_pln": 5200,
+      "request_days_after_birth": 0,
+      "stillbirth": true
+    }
+  },
+  {
+    "id": "sprawa-wro-6",
+    "filename": "Anna_Wro_6_zas._w_wysoko_ci_zasi_ku_macierzy_skiego_535c.pdf",
+    "sha256": "11304abb82ecbdf9a62742c6605878278e18115776c61b9e9d6e2f8ec97ddeae",
+    "title": "Anna Wro. — zasiłek w wysokości zasiłku macierzyńskiego",
+    "document": "ZAS-53",
+    "document_type": "zas53",
+    "kind": "sprawa",
+    "outcome": "Po utracie pracy w ciąży (upadłość / likwidacja / nielegalne zwolnienie) zasiłek 100% do porodu, nawet po ustaniu ubezpieczenia.",
+    "overlay": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": false,
+      "birth_date": "2026-08-01",
+      "number_of_children": 1,
+      "benefit_base_pln": 5200,
+      "request_days_after_birth": 10,
+      "employer_bankruptcy": true
+    }
+  }
+]

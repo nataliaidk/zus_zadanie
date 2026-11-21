@@ -2,6 +2,59 @@ from app.services.pdf_parser import detect_document_type, parse_and_calculate, r
 from tests.pdf_fixtures import INSURANCE_LINES, Z3_LINES, ZAM_LINES, ZUR_LINES, make_pdf
 
 
+def test_regex_handles_spaced_zam_and_diacritic_dates():
+    text = "\n".join(
+        [
+            "W N I O S E K  Z A M",
+            "Data porodu 01 11 2026",
+            "Data zlozenia wniosku 10.11.2026",
+            "Liczba dzieci: 1",
+            "umowa o pracę",
+            "Zaświadczenie za życiem: nie",
+        ]
+    )
+    fields = regex_extract(text)
+    assert detect_document_type(text) == ("zam", "ZAM")
+    assert fields["birth_date"].isoformat() == "2026-11-01"
+    assert fields["number_of_children"] == 1
+    assert fields["employment_form"].value == "umowa_o_prace"
+
+
+def test_filename_hint_stillbirth_and_foster(params, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    pdf = make_pdf(
+        [
+            "ZAM",
+            "Data porodu: 01.03.2026",
+            "Liczba dzieci: 1",
+            "umowa o prace",
+            "martwe urodzenie",
+        ]
+    )
+    still = parse_and_calculate(pdf, params, source_name="Anna_War_01_zas._macierzy_ski__martwe_urodzenie.pdf")
+    assert still.profile is not None
+    assert still.profile.stillbirth is True
+    assert next(item.weeks for item in still.calculation.leaves if item.leave_type == "macierzynski") == 8
+
+    foster_pdf = make_pdf(
+        [
+            "ZAM",
+            "Data porodu: 01.06.2024",
+            "Liczba dzieci: 1",
+            "umowa o prace",
+            "przyjecie dziecka na wychowanie",
+        ]
+    )
+    foster = parse_and_calculate(
+        foster_pdf,
+        params,
+        source_name="Agnieszka_War_02_zas._macierzy_ski_-_przyj_cie_dziecka_na_wychowanie.pdf",
+    )
+    assert foster.profile is not None
+    assert foster.profile.family_path.value == "foster"
+
+
 def test_regex_zam_maps_to_profile_fields():
     text = "\n".join(ZAM_LINES)
     fields = regex_extract(text)

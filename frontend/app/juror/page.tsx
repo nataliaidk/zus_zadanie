@@ -58,10 +58,11 @@ export default function JurorPage() {
 
   return (
     <AppShell aside={<DecisionCard />}>
-      <h1>Tryb jurora — sprawy PDF</h1>
+      <h1>Juror — sprawy PDF</h1>
       <p className="mt-2">
-        Wybierz sprawę z briefu albo wgraj własny PDF. Regex zawsze; LLM tylko gdy jest klucz. Kwot
-        nie zgaduje model.
+        Wybierz sprawę albo wgraj PDF z teczki (ZAM, Z-3, Z-3a, poświadczenie). Parser czyta układ i
+        polskie znaki; kwoty liczy silnik, nie czat. Folder na pliki z konkursu:{" "}
+        <code>backend/app/data/sprawy</code>.
       </p>
       <h2 className="mt-4">Gotowe sprawy</h2>
       <ul className="mt-2 grid gap-2">

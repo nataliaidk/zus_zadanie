@@ -10,6 +10,7 @@ import { useGuide } from "./GuideProvider";
 
 const NAV = [
   { href: "/", label: "Start" },
+  { href: "/juror", label: "Juror" },
   { href: "/kalkulator", label: "Kalkulator" },
   { href: "/plan", label: "Plan urlopów" },
   { href: "/ciaza", label: "Zasiłek w ciąży" },
@@ -166,8 +167,6 @@ export function AppShell({
             </p>
             <p className="mt-4">
               <Link href="/ryzyka">Ryzyka</Link>
-              {" · "}
-              <Link href="/juror">Dla jurorów</Link>
               {" · "}
               <Link href="/admin">Admin</Link>
             </p>
