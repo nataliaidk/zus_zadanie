@@ -107,7 +107,28 @@ def _unauthorized(message: str) -> bool:
     return any(marker in folded for marker in REFUSE_MARKERS)
 
 
-def _infer(message: str, prior: dict[str, Any]) -> dict[str, Any]:
+THANKS = (
+    "Jasne. Jak będziesz chciała złotówki z Twojej podstawy — wgraj PDF na Jurorze "
+    "albo wejdź w kalkulator. Tu zostaję przy planie, bez zgadywania kwot."
+)
+
+FOCUS_NODES: dict[str, tuple[str, ...]] = {
+    "l4": (
+        "swiadczenie_chorobowe_ciaza",
+        "ryzyko_wyczekiwanie_30",
+        "ryzyko_wyczekiwanie_90",
+        "przepis_wyczekiwanie",
+    ),
+    "zam": ("dokument_zam", "dokument_zniesione_zur_zao_z3b", "zdarzenie_wniosek_do_21_dni"),
+    "duration": ("swiadczenie_macierzynski", "swiadczenie_rodzicielski", "ryzyko_14_tygodni_matka"),
+    "payer": ("przepis_platnik_20", "status_duzy_platnik", "status_maly_platnik", "dokument_z3"),
+    "ojciec": ("swiadczenie_ojcowski", "ryzyko_9_tygodni_nieprzenoszalne"),
+    "rate": ("przepis_stawki", "zdarzenie_wniosek_do_21_dni"),
+    "plan": ("swiadczenie_chorobowe_ciaza", "dokument_zam", "zdarzenie_porod_jedno_dziecko"),
+}
+
+
+def _infer(message: str, prior: dict[str, Any], prev_focus: Optional[str] = None) -> dict[str, Any]:
     facts = dict(prior)
     folded = _fold(message)
     if any(
@@ -127,22 +148,51 @@ def _infer(message: str, prior: dict[str, Any]) -> dict[str, Any]:
         and facts.get("topic") != "ciaza"
     ):
         facts["topic"] = "porod"
-    if any(token in folded for token in ("ojcow", "tata", "jestem tatem", "jestem ojcem")):
+    if any(token in folded for token in ("ojcow", "taty", "tata", "ojca", "jestem tatem", "jestem ojcem")):
         facts["focus"] = "ojciec"
     if any(token in folded for token in ("zur", "zao", "z-3b", "wniosek", " zam")):
         facts["focus"] = "zam"
-    if any(token in folded for token in ("l4", "e-zla", "ezla", "zwolnien", "kod b", "chorob")):
+    if any(token in folded for token in ("l4", "e-zla", "ezla", "zwolnien", "kod b")):
         facts["focus"] = "l4"
-    if any(token in folded for token in ("kto placi", "platnik", "kto wyplac")):
+    if re.search(r"wyplac|kto.{0,32}(zus|szkol|platn|pracodawc)|szkol.{0,20}zus|zus.{0,20}szkol", folded):
         facts["focus"] = "payer"
     if any(token in folded for token in ("81", "70%", "70 %", "stawk", "ile procent")):
         facts["focus"] = "rate"
-    if any(token in folded for token in ("ile trwa", "ile tygod", "wymiar", "macierzyn", "rodzicielsk")):
-        facts["focus"] = facts.get("focus") or "duration"
+    if not facts.get("focus") and re.search(
+        r"ile.{0,24}trwa|ile.{0,24}tygod|wymiar urlop|macierzyn|rodzicielsk",
+        folded,
+    ):
+        facts["focus"] = "duration"
+    if not facts.get("focus") and re.search(r"dziekuj|dzieki|na razie tyle|to tyle|wystarczy", folded):
+        facts["focus"] = "thanks"
+    if (
+        not facts.get("focus")
+        and prev_focus == "l4"
+        and re.fullmatch(r"(tak|ok|okej|poprosze|prosze|jasne)[.!]?", folded.strip())
+    ):
+        facts["focus"] = "zam"
     month = re.search(r"(\d+)\s*\.?\s*miesi", folded)
     if month:
         facts["pregnancy_month"] = int(month.group(1))
         facts["topic"] = facts.get("topic") or "ciaza"
+    elif "miesi" in folded:
+        words = {
+            "pierwsz": 1,
+            "drug": 2,
+            "trzec": 3,
+            "czwart": 4,
+            "piat": 5,
+            "szost": 6,
+            "siodm": 7,
+            "siedm": 7,
+            "osm": 8,
+            "dziewiat": 9,
+        }
+        for word, number in words.items():
+            if word in folded:
+                facts["pregnancy_month"] = number
+                facts["topic"] = facts.get("topic") or "ciaza"
+                break
     return facts
 
 
@@ -199,9 +249,10 @@ class ChatService:
                 complete=False,
             )
 
+        prev_focus = session["facts"].get("focus")
         session["facts"]["focus"] = None
         session["last"] = message
-        session["facts"] = _infer(message, session["facts"])
+        session["facts"] = _infer(message, session["facts"], prev_focus=prev_focus)
         return self._reply(session_id, session, message)
 
     def _message_from(self, request: ChatRequest) -> str:
@@ -232,8 +283,8 @@ class ChatService:
             )
 
         query = self._graph_query(message, facts)
-        citations = self._citations(query, facts.get("employment"))
-        answer = self._compose(message, facts, citations)
+        answer = self._compose(message, facts)
+        citations = self._citations(query, facts)
         facts["asked"] = True
         if llm.llm_configured():
             polished = llm.complete(
@@ -274,14 +325,40 @@ class ChatService:
             bits.append("urlop ojcowski 14 dni")
         return " ".join(bits)
 
-    def _citations(self, query: str, employment: Optional[str]) -> list[ChatCitation]:
-        subgraph = self.graph.subgraph_for_query(query)
+    def _cite_nodes(self, node_ids: tuple[str, ...], drop: set[str]) -> list[ChatCitation]:
+        citations: list[ChatCitation] = []
+        for node_id in node_ids:
+            if node_id in drop or not self.graph.has_node(node_id):
+                continue
+            node = self.graph.graph.nodes[node_id]
+            citations.append(
+                ChatCitation(
+                    node_id=node_id,
+                    title=node["title"],
+                    plain_language=node["plain_language"],
+                    legal_basis=node["legal_basis"],
+                )
+            )
+            if len(citations) >= 3:
+                break
+        return citations
+
+    def _citations(self, query: str, facts: dict[str, Any]) -> list[ChatCitation]:
+        if facts.get("focus") == "thanks":
+            return []
+        employment = facts.get("employment")
         drop: set[str] = set()
         if employment == "umowa_o_prace":
-            drop = DROP_FOR_UMOW
+            drop = set(DROP_FOR_UMOW)
         elif employment in {"zlecenie", "jdg", "b2b"}:
-            drop = DROP_FOR_VOLUNTARY
-        citations = [
+            drop = set(DROP_FOR_VOLUNTARY)
+        key = facts.get("focus") or ("plan" if facts.get("asked") is not True else None)
+        pinned = FOCUS_NODES.get(key or "plan", ())
+        citations = self._cite_nodes(pinned, drop)
+        if citations:
+            return citations
+        subgraph = self.graph.subgraph_for_query(query)
+        return [
             ChatCitation(
                 node_id=node["id"],
                 title=node["title"],
@@ -290,23 +367,13 @@ class ChatService:
             )
             for node in subgraph["nodes"]
             if node["id"] in subgraph["hit_ids"] and node["id"] not in drop
-        ]
-        if not citations:
-            citations = [
-                ChatCitation(
-                    node_id=node["id"],
-                    title=node["title"],
-                    plain_language=node["plain_language"],
-                    legal_basis=node["legal_basis"],
-                )
-                for node in subgraph["nodes"][:4]
-                if node["id"] not in drop
-            ]
-        return citations
+        ][:3]
 
-    def _compose(self, message: str, facts: dict[str, Any], citations: list[ChatCitation]) -> str:
+    def _compose(self, message: str, facts: dict[str, Any]) -> str:
         folded = _fold(message)
         focus = facts.get("focus")
+        if focus == "thanks":
+            return THANKS
         if focus == "zam" or any(token in folded for token in ("zur", "zao", "z-3b", "zam")):
             return (
                 "Składasz jeden wniosek ZAM — u pracodawcy albo na PUE. "
@@ -363,11 +430,9 @@ class ChatService:
             return self._plan_birth(facts)
         if facts.get("asked"):
             return (
-                "Pamiętam, co już powiedziałaś. Napisz jedną rzecz: L4, wniosek ZAM, "
+                "Nie złapałam, o co teraz pytasz. Napisz: L4, ile trwa urlop, wniosek ZAM, "
                 "kto wypłaci zasiłek, albo urlop taty."
             )
-        if citations:
-            return citations[0].plain_language + " Mogę dopytać o L4, ZAM albo kto płaci — wybierz jedno."
         return "Napisz, czy jesteś w ciąży, po porodzie, czy pytasz o urlop taty — albo wybierz temat poniżej."
 
     def _plan_pregnancy(self, facts: dict[str, Any]) -> str:

@@ -172,3 +172,51 @@ def test_refuses_unauthorized_zus_submit(params):
 def test_graph_search_finds_waiting_period():
     hits = GraphService().search("ile dni wyczekiwania na umowie zlecenie")
     assert "ryzyko_wyczekiwanie_90" in hits or "przepis_wyczekiwanie" in hits
+
+
+def test_teacher_demo_script_answers_each_followup(params):
+    chat = ChatService(GraphService(), params)
+    start = chat.handle(ChatRequest(action="start"))
+    sid = start.session_id
+    turns = [
+        (
+            "Jestem w siódmym miesiącu ciąży, uczę w szkole i nie wiem, od czego zacząć.",
+            ("7.", "30 dni", "ZAM", "20"),
+        ),
+        ("A co z tym L4?", ("100%", "e-ZLA", "270")),
+        ("Tak. Jaki wniosek i na kiedy?", ("ZAM", "21 dni", "ZUR")),
+        ("Ile to trwa?", ("20 tygodni", "41")),
+        ("A kto mi to wypłaci — szkoła czy ZUS?", ("20 ubezpieczonych", "Z-3")),
+        ("Super. A urlop taty?", ("14 dni", "ojcowski")),
+        ("Dziękuję. Na razie tyle.", ("kalkulator", "Juror")),
+    ]
+    for message, needles in turns:
+        response = chat.handle(
+            ChatRequest(session_id=sid, action="question", message=message)
+        )
+        answer = response.answer or ""
+        assert "Pamiętam, co już powiedziałaś" not in answer, message
+        for needle in needles:
+            assert needle in answer, (message, needle, answer)
+        if message != "Dziękuję. Na razie tyle.":
+            assert response.citations
+            assert all(item.legal_basis for item in response.citations)
+        _no_graph_jargon(answer)
+
+
+def test_short_ile_to_trwa_is_duration_not_memory(params):
+    chat = ChatService(GraphService(), params)
+    start = chat.handle(ChatRequest(action="start"))
+    chat.handle(
+        ChatRequest(
+            session_id=start.session_id,
+            action="question",
+            message="Jestem w siódmym miesiącu ciąży, uczę w szkole i nie wiem, od czego zacząć.",
+        )
+    )
+    follow = chat.handle(
+        ChatRequest(session_id=start.session_id, action="question", message="Ile to trwa?")
+    )
+    assert "20" in (follow.answer or "")
+    assert "41" in (follow.answer or "")
+    assert any("macierzyń" in item.title.lower() or "urlop" in item.title.lower() for item in follow.citations)

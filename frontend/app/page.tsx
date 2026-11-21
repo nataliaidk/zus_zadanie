@@ -32,6 +32,9 @@ function ChatBubble({ line }: { line: ChatLine }) {
                 <li key={item.node_id}>
                   <strong>{item.title}</strong>
                   <span className="block text-sm">{item.legal_basis}</span>
+                  {item.plain_language ? (
+                    <span className="block text-sm">{item.plain_language}</span>
+                  ) : null}
                 </li>
               ))}
             </ul>
