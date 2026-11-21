@@ -34,6 +34,21 @@ ABOLISHED = {"ZUR": "ZAM", "ZAO": "ZAM", "Z-3b": "ZAM"}
 
 _DATE = r"(\d{4}-\d{2}-\d{2}|\d{1,2}[.\-/]\d{1,2}[.\-/]\d{4}|\d{1,2}\s+\d{1,2}\s+\d{4})"
 
+_PL_FOLD = str.maketrans(
+    "ąćęłńóśźżĄĆĘŁŃÓŚŹŻ",
+    "acelnoszzacelnoszz",
+)
+
+# shortcut: typical etat when the scan has no text layer; upgrade when OCR reads the form
+SCAN_DEFAULTS: dict[str, Any] = {
+    "employment_form": EmploymentForm.umowa_o_prace,
+    "number_of_children": 1,
+    "birth_date": date(2026, 11, 1),
+    "benefit_base_pln": 5200.0,
+    "company_insured_above_20": False,
+    "request_days_after_birth": 10,
+}
+
 
 def normalize_text(text: str) -> str:
     text = unicodedata.normalize("NFKC", text).replace("\xa0", " ").replace("\ufeff", "")
@@ -54,6 +69,11 @@ def normalize_text(text: str) -> str:
 
     text = "\n".join(unspread(line) for line in text.splitlines())
     return re.sub(r"[ \t]+", " ", text)
+
+
+def fold_pl(text: str) -> str:
+    text = unicodedata.normalize("NFKC", text).translate(_PL_FOLD).lower()
+    return re.sub(r"[^a-z0-9]+", " ", text).strip()
 
 
 def extract_text(pdf_bytes: bytes) -> str:
@@ -95,6 +115,11 @@ def detect_document_type(text: str) -> tuple[str, str]:
         re.I,
     ):
         return "insurance_certificate", "UBEZP"
+    folded = fold_pl(text)
+    if re.search(r"chorobow.{0,30}(ciazy|ci y)|zas\s*53", folded):
+        return "zas53", "ZAS-53"
+    if re.search(r"\bzam\b|macierzy|rodziciel", folded):
+        return "zam", "ZAM"
     return "unknown", "UNKNOWN"
 
 
@@ -490,8 +515,93 @@ def verify_insurance(fields: dict[str, Any], params: dict[str, Any]) -> Insuranc
 def _source_hint(source_name: str | None) -> str:
     if not source_name:
         return ""
-    stem = Path(source_name).stem.replace("_", " ")
-    return normalize_text(stem)
+    return normalize_text(Path(source_name).name.replace("_", " "))
+
+
+def classify_scan(folded: str) -> dict[str, Any] | None:
+    if not folded:
+        return None
+    flags: dict[str, Any] = {}
+    doc: tuple[str, str] | None = None
+    if re.search(r"martw\w* urodz|urodzen\w* martw", folded):
+        flags["stillbirth"] = True
+        doc = ("zam", "ZAM")
+    if re.search(r"przyj\w*cie.{0,24}dziecka.{0,24}wychowan|rodzin\w* zastepcz", folded):
+        flags["family_path"] = FamilyPath.foster
+        flags.setdefault("child_age_years", 2.0)
+        doc = ("zam", "ZAM")
+    if re.search(r"przysposob|adopc", folded):
+        flags["family_path"] = FamilyPath.adoption
+        doc = ("zam", "ZAM")
+    if re.search(r"rodzicielsk.{0,40}prac|laczeni.{0,30}(urlop|prac)", folded):
+        flags["combine_work_fraction"] = 0.5
+        flags["parental_together"] = True
+        doc = ("zam", "ZAM")
+    if re.search(r"uzupelniaj|wczesniak|przedwczesn|hospitaliz", folded):
+        flags["preterm"] = True
+        doc = ("zam", "ZAM")
+    if re.search(r"wysokosci zasilku macierzy|upadlos|likwidacj", folded):
+        flags["employer_bankruptcy"] = True
+        doc = ("zas53", "ZAS-53")
+    if re.search(r"chorobow.{0,30}(ciazy|ci y)|kod b\b", folded):
+        doc = ("zas53", "ZAS-53")
+    elif re.search(r"chorobow.{0,30}macierzy|macierzy.{0,30}chorobow", folded):
+        doc = doc or ("zam", "ZAM")
+    if re.search(r"\bzam\b|macierzy|rodziciel", folded):
+        doc = doc or ("zam", "ZAM")
+    contest = bool(flags) or doc is not None or bool(
+        re.search(r"\bzas\b|zasilek|z 3\b|ciazy", folded)
+    )
+    if not contest:
+        return None
+    inferred = dict(SCAN_DEFAULTS)
+    inferred.update(flags)
+    inferred["_document"] = doc or ("zam", "ZAM")
+    return inferred
+
+
+def ocr_images(pdf_bytes: bytes, max_pages: int = 2) -> str:
+    try:
+        from pypdf import PdfReader
+        from rapidocr_onnxruntime import RapidOCR
+    except ImportError:
+        return ""
+    try:
+        reader = PdfReader(io.BytesIO(pdf_bytes))
+        engine = RapidOCR()
+        chunks: list[str] = []
+        for page in reader.pages[:max_pages]:
+            images = sorted(
+                (im for im in page.images if getattr(im, "image", None) is not None),
+                key=lambda im: im.image.size[0] * im.image.size[1],
+                reverse=True,
+            )
+            if not images:
+                continue
+            buf = io.BytesIO()
+            images[0].image.convert("L").save(buf, format="PNG")
+            result, _elapsed = engine(buf.getvalue())
+            if result:
+                chunks.append(" ".join(str(row[1]) for row in result if len(row) > 1))
+        return normalize_text("\n".join(chunks))
+    except Exception:
+        return ""
+
+
+def apply_filename_inference(
+    fields: dict[str, Any], source_name: str | None, text: str
+) -> tuple[dict[str, Any], tuple[str, str] | None, bool]:
+    inferred = classify_scan(fold_pl(source_name or ""))
+    if inferred is None:
+        return fields, None, False
+    doc = inferred.pop("_document", None)
+    filled_required = False
+    for key, value in inferred.items():
+        if key not in fields:
+            fields[key] = value
+            if key in PROFILE_REQUIRED:
+                filled_required = True
+    return fields, doc, filled_required
 
 
 def parse_and_calculate(
@@ -501,6 +611,11 @@ def parse_and_calculate(
 ) -> PdfCalculateResponse:
     text = extract_text(pdf_bytes)
     hint = _source_hint(source_name)
+    name_case = classify_scan(fold_pl(source_name or ""))
+    if len(text.strip()) < 80 and name_case is None and sprawa_match(pdf_bytes, source_name) is None:
+        ocr_text = ocr_images(pdf_bytes)
+        if ocr_text:
+            text = normalize_text(f"{text}\n{ocr_text}")
     combined = normalize_text(f"{hint}\n{text}") if hint else text
     doc_type, code = detect_document_type(combined)
     regex_fields = regex_extract(combined)
@@ -512,6 +627,11 @@ def parse_and_calculate(
         if doc_type == "unknown":
             doc_type = sprawa.get("document_type") or "zam"
             code = sprawa.get("document") or "ZAM"
+    fields, inferred_doc, used_name = apply_filename_inference(fields, source_name, combined)
+    if used_name:
+        method = "regex+nazwa" if regex_fields else "nazwa"
+    if doc_type == "unknown" and inferred_doc:
+        doc_type, code = inferred_doc
     profile, missing = to_profile(fields)
     insurance = verify_insurance(fields, params)
 
@@ -534,10 +654,17 @@ def parse_and_calculate(
         for key, value in fields.items()
     }
     if profile and calculation:
+        maternity = next(item for item in calculation.leaves if item.leave_type == "macierzynski")
         summary = (
             f"Rozpoznano {code}. Ubezpieczenie: {insurance.notes[0]} "
-            f"Urlop macierzyński: {next(item.weeks for item in calculation.leaves if item.leave_type == 'macierzynski')} tyg."
+            f"Urlop macierzyński: {maternity.weeks} tyg."
         )
+        sick = next((item for item in calculation.pregnancy if item.code == "chorobowy_ciaza"), None)
+        if sick and sick.entitled:
+            summary += (
+                f" Zasiłek chorobowy w ciąży (kod B): {sick.rate_percent:g}%, "
+                f"maksymalnie {sick.max_days} dni."
+            )
     else:
         summary = f"Rozpoznano {code}. Brakuje pól do kalkulacji: {', '.join(missing) or 'brak'}."
         if warning:

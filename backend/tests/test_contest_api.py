@@ -1,3 +1,28 @@
+from tests.pdf_fixtures import make_pdf
+
+
+def test_upload_zuzanna_pregnancy_sickness(client, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    response = client.post(
+        "/api/pdf/calculate",
+        files={
+            "file": (
+                "Zuzanna Le_zas. chorobowy w ciąży.pdf",
+                make_pdf(["skan bez warstwy tekstu"]),
+                "application/pdf",
+            )
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["missing_fields"] == []
+    assert body["document_code"] == "ZAS-53"
+    assert body["profile"] is not None
+    assert body["calculation"] is not None
+    assert any(item["code"] == "chorobowy_ciaza" for item in body["calculation"]["pregnancy"])
+
+
 def test_charities(client):
     response = client.get("/api/charities")
     assert response.status_code == 200

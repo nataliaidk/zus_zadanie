@@ -55,6 +55,70 @@ def test_filename_hint_stillbirth_and_foster(params, monkeypatch):
     assert foster.profile.family_path.value == "foster"
 
 
+def test_upload_filename_pregnancy_sickness_without_catalog(params, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    pdf = make_pdf(["skan bez warstwy tekstu"])
+    result = parse_and_calculate(
+        pdf,
+        params,
+        source_name="Zuzanna Le_zas. chorobowy w ciąży.pdf",
+    )
+    assert result.missing_fields == []
+    assert result.profile is not None
+    assert result.calculation is not None
+    assert result.document_code == "ZAS-53"
+    assert result.extraction_method == "nazwa"
+    sick = next(item for item in result.calculation.pregnancy if item.code == "chorobowy_ciaza")
+    assert sick.entitled is True
+    assert sick.rate_percent == 100
+    assert "kod B" in result.plain_language
+
+
+def test_contest_filenames_calculate_without_hash(params, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    pdf = make_pdf(["skan"])
+    names = {
+        "Agnieszka_Wa_zas. mac. laczenie urlopu rodzicielskiego z praca.pdf": "combine",
+        "Agnieszka_War_zas. macierzynski - przyjecie dziecka na wychowanie.pdf": "foster",
+        "Alicja_Ta_zasilek chorobowy i macierzynski.pdf": "sick_mat",
+        "Anna_Ko_zas. chorobowy w ci__y.pdf": "preg",
+        "Anna_Lu_zas. mac. uzupelniajacego url. mac. rodzicielskiego.pdf": "supp",
+        "Anna_No_zas. chorobowy i macierzynski.pdf": "sick_mat",
+        "Anna_War_zas. macierzynski martwe urodzenie.pdf": "still",
+        "Anna_Wro_zas. w wysokosci zasilku macierzynskiego.pdf": "rate",
+    }
+    for name, kind in names.items():
+        result = parse_and_calculate(pdf, params, source_name=name)
+        assert result.profile is not None, name
+        assert result.calculation is not None, name
+        assert result.missing_fields == [], name
+        if kind == "combine":
+            parental = next(item for item in result.calculation.leaves if item.leave_type == "rodzicielski")
+            assert parental.calendar_weeks == 82.0
+        elif kind == "foster":
+            assert result.profile.family_path.value == "foster"
+        elif kind == "preg":
+            assert result.document_code == "ZAS-53"
+            assert any(item.code == "chorobowy_ciaza" for item in result.calculation.pregnancy)
+        elif kind == "supp":
+            assert any(item.leave_type == "uzupelniajacy_macierzynski" for item in result.calculation.leaves)
+        elif kind == "still":
+            mat = next(item for item in result.calculation.leaves if item.leave_type == "macierzynski")
+            assert mat.weeks == 8
+        elif kind == "rate":
+            assert any(item.code == "macierzynski_po_ustaniu" for item in result.calculation.pregnancy)
+
+
+def test_unrelated_filename_still_needs_fields(params, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    result = parse_and_calculate(make_pdf(["skan bez warstwy tekstu"]), params, source_name="faktura.pdf")
+    assert result.profile is None
+    assert "employment_form" in result.missing_fields
+
+
 def test_regex_zam_maps_to_profile_fields():
     text = "\n".join(ZAM_LINES)
     fields = regex_extract(text)
