@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { AppShell } from "@/components/AppShell";
-import { DecisionCard } from "@/components/DecisionCard";
+import { BenefitTable, DecisionCard } from "@/components/DecisionCard";
 import { useGuide } from "@/components/GuideProvider";
 import { calculateSample, loadSamples, uploadPdf } from "@/lib/api";
 import type { CalculationResult, ParentProfile, SampleCase } from "@/lib/types";
@@ -13,6 +13,7 @@ export default function JurorPage() {
   const [status, setStatus] = useState<string | null>(null);
   const [plain, setPlain] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [calc, setCalc] = useState<CalculationResult | null>(null);
 
   useEffect(() => {
     void loadSamples()
@@ -24,7 +25,11 @@ export default function JurorPage() {
     setPlain(typeof body.plain_language === "string" ? body.plain_language : fallback);
     setWarning(typeof body.abolished_form_warning === "string" ? body.abolished_form_warning : null);
     if (body.profile && body.calculation) {
-      applyResult(body.profile as ParentProfile, body.calculation as CalculationResult);
+      const next = body.calculation as CalculationResult;
+      applyResult(body.profile as ParentProfile, next);
+      setCalc(next);
+    } else {
+      setCalc(null);
     }
   }
 
@@ -96,6 +101,11 @@ export default function JurorPage() {
         {status ? <p className="note mt-4">{status}</p> : null}
         {warning ? <p className="alert mt-4">{warning}</p> : null}
         {plain ? <p className="mt-4 whitespace-pre-wrap">{plain}</p> : null}
+        {calc ? (
+          <div className="mt-4">
+            <BenefitTable calculation={calc} />
+          </div>
+        ) : null}
       </div>
     </AppShell>
   );

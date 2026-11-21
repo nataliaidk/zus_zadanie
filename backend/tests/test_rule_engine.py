@@ -2,7 +2,7 @@ from datetime import date
 
 import pytest
 
-from app.models.schemas import EmploymentForm, ParentProfile, Payer
+from app.models.schemas import Claimant, ClaimScope, EmploymentForm, ParentProfile, Payer
 from app.services.rule_engine import ABOLISHED_FORMS, active_form_codes, calculate
 
 
@@ -128,3 +128,23 @@ def test_b2b_arrears_risk(params):
         params,
     )
     assert any(risk.code == "zaleglosci_skladek" and risk.severity == "block" for risk in result.risks)
+
+
+def test_father_parental_claim_is_70_percent_with_amount(params):
+    result = calculate(
+        _profile(
+            claim_scope=ClaimScope.parental,
+            claimant=Claimant.father,
+            benefit_base_pln=6120.5,
+            request_days_after_birth=40,
+        ),
+        params,
+    )
+    assert [item.leave_type for item in result.leaves] == ["rodzicielski"]
+    parental = result.leaves[0]
+    assert parental.weeks == 41
+    assert parental.rate_percent == 70.0
+    assert parental.amount_pln == round(6120.5 * 0.7 * (41 / 4.345), 2)
+    assert parental.title == "Urlop rodzicielski (ojciec)"
+    assert result.pregnancy == []
+    assert result.combined_rate_applied is False

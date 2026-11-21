@@ -23,6 +23,37 @@ def test_upload_zuzanna_pregnancy_sickness(client, monkeypatch):
     assert any(item["code"] == "chorobowy_ciaza" for item in body["calculation"]["pregnancy"])
 
 
+def test_upload_wojciech_parental_amounts(client, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    response = client.post(
+        "/api/pdf/calculate",
+        files={
+            "file": (
+                "Wojciech Lu_4_zas. mac. za okres urlopu rodzicielskiego.pdf",
+                make_pdf(
+                    [
+                        "ZAM",
+                        "za okres urlopu rodzicielskiego",
+                        "Data porodu: 01.03.2026",
+                        "Liczba dzieci: 1",
+                        "umowa o prace",
+                        "Podstawa wymiaru: 6120,50 zl",
+                    ]
+                ),
+                "application/pdf",
+            )
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["missing_fields"] == []
+    assert [item["leave_type"] for item in body["calculation"]["leaves"]] == ["rodzicielski"]
+    assert body["calculation"]["leaves"][0]["rate_percent"] == 70.0
+    assert body["calculation"]["monthly_base_pln"] == 6120.5
+    assert not any(item["code"] == "chorobowy_ciaza" for item in body["calculation"]["pregnancy"])
+
+
 def test_charities(client):
     response = client.get("/api/charities")
     assert response.status_code == 200

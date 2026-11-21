@@ -111,6 +111,43 @@ def test_contest_filenames_calculate_without_hash(params, monkeypatch):
             assert any(item.code == "macierzynski_po_ustaniu" for item in result.calculation.pregnancy)
 
 
+def test_wojciech_parental_uses_pdf_base_not_kod_b(params, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    pdf = make_pdf(
+        [
+            "ZAM",
+            "Wniosek o zasilek macierzynski za okres urlopu rodzicielskiego",
+            "Data porodu: 01.03.2026",
+            "Liczba dzieci: 1",
+            "umowa o prace",
+            "Podstawa wymiaru: 6120,50 zl",
+            "Liczba ubezpieczonych: 8",
+        ]
+    )
+    result = parse_and_calculate(
+        pdf,
+        params,
+        source_name="Wojciech Lu_4_zas. mac. za okres urlopu rodzicielskiego.pdf",
+    )
+    assert result.missing_fields == []
+    assert result.profile is not None
+    assert result.profile.claimant.value == "father"
+    assert result.profile.claim_scope.value == "parental"
+    assert result.profile.benefit_base_pln == 6120.5
+    assert [item.leave_type for item in result.calculation.leaves] == ["rodzicielski"]
+    parental = result.calculation.leaves[0]
+    assert parental.weeks == 41
+    assert parental.rate_percent == 70.0
+    assert parental.amount_pln is not None and parental.amount_pln > 0
+    assert result.calculation.payer.value == "ZUS"
+    assert result.calculation.monthly_base_pln == 6120.5
+    assert not any(item.code == "chorobowy_ciaza" for item in result.calculation.pregnancy)
+    assert "kod B" not in result.plain_language
+    assert "6120.50" in result.plain_language
+    assert "ojca" in result.plain_language.lower() or "ojciec" in result.plain_language.lower()
+
+
 def test_unrelated_filename_still_needs_fields(params, monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("LLM_API_KEY", raising=False)

@@ -1,5 +1,7 @@
 export type EmploymentForm = "umowa_o_prace" | "zlecenie" | "jdg" | "b2b";
 export type FamilyPath = "birth" | "adoption" | "foster";
+export type ClaimScope = "full" | "parental" | "pregnancy";
+export type Claimant = "mother" | "father";
 
 export type ParentProfile = {
   employment_form: EmploymentForm;
@@ -28,6 +30,8 @@ export type ParentProfile = {
   rehab_after_sickness?: boolean;
   mother_hospitalized?: boolean;
   mother_incapacity?: boolean;
+  claim_scope?: ClaimScope;
+  claimant?: Claimant;
 };
 
 export type LeaveItem = {

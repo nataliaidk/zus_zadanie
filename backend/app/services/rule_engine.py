@@ -2,6 +2,8 @@ from typing import Any
 
 from app.models.schemas import (
     CalculationResult,
+    Claimant,
+    ClaimScope,
     DocumentItem,
     EmploymentForm,
     FamilyPath,
@@ -524,6 +526,33 @@ def calculate(profile: ParentProfile, params: dict[str, Any]) -> CalculationResu
     else:
         explanation.extend(["swiadczenie_stawka_100", "swiadczenie_stawka_70"])
 
+    pregnancy = _pregnancy_block(profile, params, waiting)
+    if profile.claim_scope == ClaimScope.parental:
+        parental_only = [item for item in leaves if item.leave_type == "rodzicielski"]
+        if parental_only:
+            if profile.claimant == Claimant.father:
+                parental_only[0].title = "Urlop rodzicielski (ojciec)"
+                parental_only[0].plain_language = (
+                    f"{parental_only[0].weeks} tygodni puli rodzicielskiej. "
+                    f"{non_transferable} tygodni nieprzenoszalnych dla ojca. "
+                    f"Zasiłek {parental_only[0].rate_percent:g}%."
+                    + (
+                        f" Kwota {parental_only[0].amount_pln:.2f} zł."
+                        if parental_only[0].amount_pln is not None
+                        else " Brak podstawy wymiaru w dokumencie — bez kwoty."
+                    )
+                )
+            leaves = parental_only
+        pregnancy = []
+        risks = [item for item in risks if item.code in {"9_tygodni_nieprzenoszalne", "termin_21_dni"}]
+        explanation = ["swiadczenie_rodzicielski", "dokument_zam", "ryzyko_9_tygodni_nieprzenoszalne"]
+        if combined:
+            explanation.append("swiadczenie_stawka_815")
+        else:
+            explanation.append("swiadczenie_stawka_70")
+    elif profile.claim_scope == ClaimScope.pregnancy:
+        risks = [item for item in risks if item.code in {"wyczekiwanie", "zaleglosci_skladek"}]
+
     return CalculationResult(
         legal_as_of=params["legal_as_of"],
         waiting_period_days=waiting,
@@ -536,7 +565,7 @@ def calculate(profile: ParentProfile, params: dict[str, Any]) -> CalculationResu
         block_reason=block_reason,
         explanation_node_ids=explanation,
         poka_yoke=poka_yoke,
-        pregnancy=_pregnancy_block(profile, params, waiting),
+        pregnancy=pregnancy,
         filing=_filing(profile, payer),
         monthly_base_pln=profile.benefit_base_pln,
         family_path=profile.family_path.value,

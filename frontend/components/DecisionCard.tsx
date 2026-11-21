@@ -1,8 +1,47 @@
 "use client";
 
+import type { CalculationResult } from "@/lib/types";
 import { pln } from "@/lib/types";
 import { ExplainPanel } from "./ExplainPanel";
 import { useGuide } from "./GuideProvider";
+
+export function BenefitTable({ calculation }: { calculation: CalculationResult }) {
+  return (
+    <div className="grid gap-4">
+      <p>
+        Podstawa:{" "}
+        <strong>
+          {calculation.monthly_base_pln != null ? pln(calculation.monthly_base_pln) : "nie odczytano ze skanu"}
+        </strong>
+        {" · "}
+        Płatnik: <strong>{calculation.payer === "ZUS" ? "ZUS" : "Twój pracodawca"}</strong>
+        {" · "}
+        Stawka: {calculation.combined_rate_applied ? "81,5% za całość" : "70% rodzicielski / 100% macierzyński"}
+      </p>
+      <table>
+        <caption className="p-2 text-left">Wyliczenie zasiłku</caption>
+        <thead>
+          <tr>
+            <th className="p-2 text-left">Świadczenie</th>
+            <th className="p-2 text-left">Tygodnie</th>
+            <th className="p-2 text-left">Stawka</th>
+            <th className="p-2 text-left">Kwota</th>
+          </tr>
+        </thead>
+        <tbody>
+          {calculation.leaves.map((item) => (
+            <tr key={item.leave_type}>
+              <td className="border p-2">{item.title}</td>
+              <td className="border p-2">{item.weeks ?? item.days ?? "—"}</td>
+              <td className="border p-2">{item.rate_percent.toLocaleString("pl-PL")}%</td>
+              <td className="border p-2">{item.amount_pln != null ? pln(item.amount_pln) : "—"}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 function severityWord(severity: string): string {
   if (severity === "block") return "Blokada";
@@ -58,11 +97,7 @@ export function DecisionCard() {
               {calculation.block_reason}
             </p>
           ) : null}
-          {calculation.monthly_base_pln != null ? (
-            <p>
-              Podstawa: <strong>{pln(calculation.monthly_base_pln)}</strong>
-            </p>
-          ) : null}
+          <BenefitTable calculation={calculation} />
           <ul className="flex flex-col gap-3">
             {calculation.leaves.map((item, index) => (
               <li key={item.leave_type} className="step">

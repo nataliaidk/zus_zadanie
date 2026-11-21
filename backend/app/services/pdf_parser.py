@@ -18,6 +18,8 @@ from typing import Any, Optional
 import pdfplumber
 
 from app.models.schemas import (
+    Claimant,
+    ClaimScope,
     EmploymentForm,
     FamilyPath,
     InsuranceVerification,
@@ -44,10 +46,14 @@ SCAN_DEFAULTS: dict[str, Any] = {
     "employment_form": EmploymentForm.umowa_o_prace,
     "number_of_children": 1,
     "birth_date": date(2026, 11, 1),
-    "benefit_base_pln": 5200.0,
     "company_insured_above_20": False,
-    "request_days_after_birth": 10,
 }
+
+_FATHER_HINT = re.compile(
+    r"\b(wojciech|piotr|jan|tomasz|krzysztof|andrzej|michal|marcin|pawel|lukasz|"
+    r"marek|jakub|adam|grzegorz|mateusz|robert|kamil|dawid|bartosz|maciej|"
+    r"stefan|jerzy|henryk|ojciec|tata|ojcowsk)\b"
+)
 
 
 def normalize_text(text: str) -> str:
@@ -248,16 +254,50 @@ def regex_extract(text: str) -> dict[str, Any]:
     elif re.search(r"podlega ubezpieczeniu chorob", text, re.I):
         fields["covered_on_birth"] = True
 
-    base = re.search(
-        r"podstawa\s+wymiaru[:\s]+(\d+(?:[.,]\d+)?)\s*(?:z[lł]|pln)?",
-        text,
-        re.I,
-    )
-    if base:
-        fields["benefit_base_pln"] = float(base.group(1).replace(",", "."))
+    base = _extract_benefit_base(text)
+    if base is not None:
+        fields["benefit_base_pln"] = base
 
     _situation_flags(text, fields)
     return fields
+
+
+def _parse_money(raw: str) -> Optional[float]:
+    token = raw.strip().replace("\xa0", " ")
+    token = re.sub(r"\s+", "", token)
+    if re.search(r",\d{2}$", token):
+        token = token.replace(".", "").replace(",", ".")
+    else:
+        token = token.replace(",", "")
+    try:
+        value = float(token)
+    except ValueError:
+        return None
+    if 400 <= value <= 100_000:
+        return round(value, 2)
+    return None
+
+
+def _extract_benefit_base(text: str) -> Optional[float]:
+    money = r"(\d{1,3}(?:[ \u00a0.]\d{3})+[.,]\d{2}|\d+[.,]\d{2}|\d{1,3}(?:[ \u00a0.]\d{3})+|\d{4,6})"
+    labeled = re.search(
+        r"(?:podstawa\s+wymiaru|wymiaru\s+zasi[lł]ku|przeci[eę]tn\w+\s+miesi[eę]czn\w+\s+(?:przych[oó]d|wynagrodzen))"
+        r"[^\d]{0,40}" + money,
+        text,
+        re.I | re.S,
+    )
+    if labeled:
+        parsed = _parse_money(labeled.group(1))
+        if parsed is not None:
+            return parsed
+    fallback = re.search(
+        r"(?:kwota|wynosi|podstawa)[^\d]{0,20}" + money + r"\s*(?:z[lł]|pln)\b",
+        text,
+        re.I,
+    )
+    if fallback:
+        return _parse_money(fallback.group(1))
+    return None
 
 
 def _situation_flags(text: str, fields: dict[str, Any]) -> None:
@@ -376,6 +416,12 @@ def _coerce_overlay(raw: dict[str, Any]) -> dict[str, Any]:
     path = raw.get("family_path")
     if path in {e.value for e in FamilyPath}:
         fields["family_path"] = FamilyPath(path)
+    scope = raw.get("claim_scope")
+    if scope in {e.value for e in ClaimScope}:
+        fields["claim_scope"] = ClaimScope(scope)
+    who = raw.get("claimant")
+    if who in {e.value for e in Claimant}:
+        fields["claimant"] = Claimant(who)
     for key in (
         "company_insured_above_20",
         "preterm",
@@ -427,6 +473,12 @@ def to_profile(fields: dict[str, Any]) -> tuple[Optional[ParentProfile], list[st
     family = fields.get("family_path", FamilyPath.birth)
     if isinstance(family, str):
         family = FamilyPath(family)
+    scope = fields.get("claim_scope", ClaimScope.full)
+    if isinstance(scope, str):
+        scope = ClaimScope(scope)
+    who = fields.get("claimant", Claimant.mother)
+    if isinstance(who, str):
+        who = Claimant(who)
     return (
         ParentProfile(
             employment_form=fields["employment_form"],
@@ -447,6 +499,8 @@ def to_profile(fields: dict[str, Any]) -> tuple[Optional[ParentProfile], list[st
             parental_together=bool(fields.get("parental_together", False)),
             rehab_after_sickness=bool(fields.get("rehab_after_sickness", False)),
             employer_bankruptcy=bool(fields.get("employer_bankruptcy", False)),
+            claim_scope=scope,
+            claimant=who,
         ),
         [],
     )
@@ -544,8 +598,19 @@ def classify_scan(folded: str) -> dict[str, Any] | None:
         flags["employer_bankruptcy"] = True
         doc = ("zas53", "ZAS-53")
     if re.search(r"chorobow.{0,30}(ciazy|ci y)|kod b\b", folded):
+        flags["claim_scope"] = ClaimScope.pregnancy
         doc = ("zas53", "ZAS-53")
     elif re.search(r"chorobow.{0,30}macierzy|macierzy.{0,30}chorobow", folded):
+        doc = doc or ("zam", "ZAM")
+    if re.search(r"za okres urlopu rodzicielskiego", folded) and not re.search(
+        r"za okres urlopu macierzy", folded
+    ):
+        flags["claim_scope"] = ClaimScope.parental
+        doc = ("zam", "ZAM")
+    if _FATHER_HINT.search(folded):
+        flags["claimant"] = Claimant.father
+        if flags.get("claim_scope") is None and re.search(r"rodziciel", folded):
+            flags["claim_scope"] = ClaimScope.parental
         doc = doc or ("zam", "ZAM")
     if re.search(r"\bzam\b|macierzy|rodziciel", folded):
         doc = doc or ("zam", "ZAM")
@@ -563,14 +628,18 @@ def classify_scan(folded: str) -> dict[str, Any] | None:
 def ocr_images(pdf_bytes: bytes, max_pages: int = 2) -> str:
     try:
         from pypdf import PdfReader
-        from rapidocr_onnxruntime import RapidOCR
     except ImportError:
         return ""
     try:
         reader = PdfReader(io.BytesIO(pdf_bytes))
+        pages = reader.pages[:max_pages]
+        if not any(page.images for page in pages):
+            return ""
+        from rapidocr_onnxruntime import RapidOCR
+
         engine = RapidOCR()
         chunks: list[str] = []
-        for page in reader.pages[:max_pages]:
+        for page in pages:
             images = sorted(
                 (im for im in page.images if getattr(im, "image", None) is not None),
                 key=lambda im: im.image.size[0] * im.image.size[1],
@@ -611,11 +680,6 @@ def parse_and_calculate(
 ) -> PdfCalculateResponse:
     text = extract_text(pdf_bytes)
     hint = _source_hint(source_name)
-    name_case = classify_scan(fold_pl(source_name or ""))
-    if len(text.strip()) < 80 and name_case is None and sprawa_match(pdf_bytes, source_name) is None:
-        ocr_text = ocr_images(pdf_bytes)
-        if ocr_text:
-            text = normalize_text(f"{text}\n{ocr_text}")
     combined = normalize_text(f"{hint}\n{text}") if hint else text
     doc_type, code = detect_document_type(combined)
     regex_fields = regex_extract(combined)
@@ -632,6 +696,16 @@ def parse_and_calculate(
         method = "regex+nazwa" if regex_fields else "nazwa"
     if doc_type == "unknown" and inferred_doc:
         doc_type, code = inferred_doc
+    if "benefit_base_pln" not in fields:
+        ocr_text = ocr_images(pdf_bytes, max_pages=4)
+        if ocr_text:
+            ocr_fields = regex_extract(ocr_text)
+            if "benefit_base_pln" in ocr_fields:
+                fields["benefit_base_pln"] = ocr_fields["benefit_base_pln"]
+                method = f"{method}+ocr" if method else "ocr"
+            for extra in ("insured_count", "company_insured_above_20", "insurance_start"):
+                if extra in ocr_fields and extra not in fields:
+                    fields[extra] = ocr_fields[extra]
     profile, missing = to_profile(fields)
     insurance = verify_insurance(fields, params)
 
@@ -648,23 +722,32 @@ def parse_and_calculate(
             value.isoformat()
             if isinstance(value, date)
             else value.value
-            if isinstance(value, (EmploymentForm, FamilyPath))
+            if isinstance(value, (EmploymentForm, FamilyPath, ClaimScope, Claimant))
             else value
         )
         for key, value in fields.items()
     }
     if profile and calculation:
-        maternity = next(item for item in calculation.leaves if item.leave_type == "macierzynski")
-        summary = (
-            f"Rozpoznano {code}. Ubezpieczenie: {insurance.notes[0]} "
-            f"Urlop macierzyński: {maternity.weeks} tyg."
-        )
-        sick = next((item for item in calculation.pregnancy if item.code == "chorobowy_ciaza"), None)
-        if sick and sick.entitled:
-            summary += (
-                f" Zasiłek chorobowy w ciąży (kod B): {sick.rate_percent:g}%, "
+        bits = [f"Rozpoznano {code}."]
+        if profile.claimant == Claimant.father:
+            bits.append("Wniosek ojca.")
+        if calculation.monthly_base_pln is not None:
+            bits.append(f"Podstawa wymiaru: {calculation.monthly_base_pln:.2f} zł.")
+        else:
+            bits.append("W skanie nie ma podstawy wymiaru — liczę tygodnie i stawkę, bez złotówek.")
+        bits.append(f"Płatnik: {calculation.payer.value}.")
+        for item in calculation.leaves:
+            amount = f", {item.amount_pln:.2f} zł" if item.amount_pln is not None else ""
+            bits.append(
+                f"{item.title}: {item.weeks} tyg. × {item.rate_percent:g}%{amount}."
+            )
+        sick = next((item for item in calculation.pregnancy if item.code == "chorobowy_ciaza" and item.entitled), None)
+        if sick:
+            bits.append(
+                f"Zasiłek chorobowy w ciąży (kod B): {sick.rate_percent:g}%, "
                 f"maksymalnie {sick.max_days} dni."
             )
+        summary = " ".join(bits)
     else:
         summary = f"Rozpoznano {code}. Brakuje pól do kalkulacji: {', '.join(missing) or 'brak'}."
         if warning:

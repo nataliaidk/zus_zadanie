@@ -18,6 +18,17 @@ class FamilyPath(str, Enum):
     foster = "foster"
 
 
+class ClaimScope(str, Enum):
+    full = "full"
+    parental = "parental"
+    pregnancy = "pregnancy"
+
+
+class Claimant(str, Enum):
+    mother = "mother"
+    father = "father"
+
+
 class Payer(str, Enum):
     employer = "pracodawca"
     zus = "ZUS"
@@ -56,6 +67,8 @@ class ParentProfile(BaseModel):
     rehab_after_sickness: bool = False
     mother_hospitalized: bool = False
     mother_incapacity: bool = False
+    claim_scope: ClaimScope = ClaimScope.full
+    claimant: Claimant = Claimant.mother
 
 
 class LeaveItem(BaseModel):
