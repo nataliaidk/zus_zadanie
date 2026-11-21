@@ -90,10 +90,8 @@ def extract_text(pdf_bytes: bytes) -> str:
             pages.append(raw)
             for table in page.extract_tables() or []:
                 for row in table:
-                    cells = [cell.strip() for cell in row if cell and str(cell).strip()]
-                    if len(cells) >= 2:
-                        pages.append(": ".join(cells))
-                    elif cells:
+                    cells = [str(cell).strip() for cell in row if cell and str(cell).strip()]
+                    if cells:
                         pages.append(" ".join(cells))
     return normalize_text("\n".join(pages))
 
@@ -278,7 +276,34 @@ def _parse_money(raw: str) -> Optional[float]:
     return None
 
 
+def extract_wage_grid(text: str) -> Optional[float]:
+    """Average of Z-3 column 6 (stałe wynagrodzenie zasadnicze) from monthly rows."""
+    if not text:
+        return None
+    wages: list[float] = []
+    for match in re.finditer(
+        r"20\d{2}(?:\s+\d{1,2}){1,6}\s+(\d{3,5}[.,]\d{2})(?!\s*%)",
+        text,
+    ):
+        value = _parse_money(match.group(1))
+        if value is not None and 1000 <= value <= 80_000:
+            wages.append(value)
+    if not wages:
+        folded = fold_pl(text)
+        if re.search(r"zasadnicz|skladnik\w* wynagrodzen", folded):
+            for raw in re.findall(r"\b(\d{3,5}[.,]\d{2})\b", text):
+                value = _parse_money(raw)
+                if value is not None and 1000 <= value <= 80_000:
+                    wages.append(value)
+    if not wages:
+        return None
+    return round(sum(wages) / len(wages), 2)
+
+
 def _extract_benefit_base(text: str) -> Optional[float]:
+    grid = extract_wage_grid(text)
+    if grid is not None:
+        return grid
     money = r"(\d{1,3}(?:[ \u00a0.]\d{3})+[.,]\d{2}|\d+[.,]\d{2}|\d{1,3}(?:[ \u00a0.]\d{3})+|\d{4,6})"
     labeled = re.search(
         r"(?:podstawa\s+wymiaru|wymiaru\s+zasi[lł]ku|przeci[eę]tn\w+\s+miesi[eę]czn\w+\s+(?:przych[oó]d|wynagrodzen))"
@@ -625,33 +650,53 @@ def classify_scan(folded: str) -> dict[str, Any] | None:
     return inferred
 
 
-def ocr_images(pdf_bytes: bytes, max_pages: int = 2) -> str:
+_OCR_ENGINE = None
+
+
+def _ocr_engine():
+    global _OCR_ENGINE
+    if _OCR_ENGINE is None:
+        from rapidocr_onnxruntime import RapidOCR
+
+        _OCR_ENGINE = RapidOCR()
+    return _OCR_ENGINE
+
+
+def ocr_images(pdf_bytes: bytes, max_pages: int = 8) -> str:
     try:
         from pypdf import PdfReader
     except ImportError:
         return ""
     try:
         reader = PdfReader(io.BytesIO(pdf_bytes))
-        pages = reader.pages[:max_pages]
-        if not any(page.images for page in pages):
-            return ""
-        from rapidocr_onnxruntime import RapidOCR
-
-        engine = RapidOCR()
-        chunks: list[str] = []
-        for page in pages:
-            images = sorted(
-                (im for im in page.images if getattr(im, "image", None) is not None),
-                key=lambda im: im.image.size[0] * im.image.size[1],
-                reverse=True,
-            )
+        scored: list[tuple[float, int, object]] = []
+        for index, page in enumerate(reader.pages):
+            images = [
+                im for im in page.images if getattr(im, "image", None) is not None
+            ]
             if not images:
                 continue
+            image = max(images, key=lambda im: im.image.size[0] * im.image.size[1]).image
+            sample = image.convert("L").resize((80, 110))
+            dark = sum(1 for pixel in sample.getdata() if pixel < 200) / (80 * 110)
+            if dark < 0.02:
+                continue
+            scored.append((dark, index, image))
+        if not scored:
+            return ""
+        engine = _ocr_engine()
+        scored.sort(reverse=True)
+        chunks: list[str] = []
+        for _dark, _index, image in scored[:max_pages]:
             buf = io.BytesIO()
-            images[0].image.convert("L").save(buf, format="PNG")
+            image.convert("L").save(buf, format="PNG")
             result, _elapsed = engine(buf.getvalue())
-            if result:
-                chunks.append(" ".join(str(row[1]) for row in result if len(row) > 1))
+            if not result:
+                continue
+            piece = " ".join(str(row[1]) for row in result if len(row) > 1)
+            chunks.append(piece)
+            if extract_wage_grid(piece):
+                break
         return normalize_text("\n".join(chunks))
     except Exception:
         return ""
@@ -696,16 +741,19 @@ def parse_and_calculate(
         method = "regex+nazwa" if regex_fields else "nazwa"
     if doc_type == "unknown" and inferred_doc:
         doc_type, code = inferred_doc
-    if "benefit_base_pln" not in fields:
-        ocr_text = ocr_images(pdf_bytes, max_pages=4)
+    wage = extract_wage_grid(combined)
+    if wage is None:
+        ocr_text = ocr_images(pdf_bytes)
         if ocr_text:
             ocr_fields = regex_extract(ocr_text)
-            if "benefit_base_pln" in ocr_fields:
-                fields["benefit_base_pln"] = ocr_fields["benefit_base_pln"]
-                method = f"{method}+ocr" if method else "ocr"
             for extra in ("insured_count", "company_insured_above_20", "insurance_start"):
                 if extra in ocr_fields and extra not in fields:
                     fields[extra] = ocr_fields[extra]
+            wage = extract_wage_grid(ocr_text) or ocr_fields.get("benefit_base_pln")
+            if wage is not None:
+                method = f"{method}+ocr" if method else "ocr"
+    if wage is not None:
+        fields["benefit_base_pln"] = wage
     profile, missing = to_profile(fields)
     insurance = verify_insurance(fields, params)
 

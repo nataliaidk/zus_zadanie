@@ -13,7 +13,6 @@
       "company_insured_above_20": false,
       "birth_date": "2026-03-15",
       "number_of_children": 1,
-      "benefit_base_pln": 5200,
       "request_days_after_birth": 10,
       "combine_work_fraction": 0.5,
       "parental_together": true
@@ -33,7 +32,6 @@
       "company_insured_above_20": false,
       "birth_date": "2024-06-01",
       "number_of_children": 1,
-      "benefit_base_pln": 4500,
       "request_days_after_birth": 0,
       "family_path": "foster",
       "child_age_years": 2
@@ -53,7 +51,6 @@
       "company_insured_above_20": false,
       "birth_date": "2026-03-15",
       "number_of_children": 1,
-      "benefit_base_pln": 5200,
       "request_days_after_birth": 10,
       "rehab_after_sickness": true
     }
@@ -72,7 +69,6 @@
       "company_insured_above_20": false,
       "birth_date": "2026-08-01",
       "number_of_children": 1,
-      "benefit_base_pln": 5200,
       "request_days_after_birth": 10
     }
   },
@@ -90,7 +86,6 @@
       "company_insured_above_20": false,
       "birth_date": "2025-02-11",
       "number_of_children": 1,
-      "benefit_base_pln": 5200,
       "request_days_after_birth": 5,
       "preterm": true
     }
@@ -109,7 +104,6 @@
       "company_insured_above_20": false,
       "birth_date": "2026-03-15",
       "number_of_children": 1,
-      "benefit_base_pln": 4800,
       "request_days_after_birth": 10
     }
   },
@@ -127,7 +121,6 @@
       "company_insured_above_20": false,
       "birth_date": "2026-03-15",
       "number_of_children": 1,
-      "benefit_base_pln": 5200,
       "request_days_after_birth": 0,
       "stillbirth": true
     }
@@ -146,7 +139,6 @@
       "company_insured_above_20": false,
       "birth_date": "2026-08-01",
       "number_of_children": 1,
-      "benefit_base_pln": 5200,
       "request_days_after_birth": 10,
       "employer_bankruptcy": true
     }

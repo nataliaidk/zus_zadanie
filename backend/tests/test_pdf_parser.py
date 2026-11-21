@@ -1,4 +1,6 @@
-from app.services.pdf_parser import detect_document_type, parse_and_calculate, regex_extract
+from pathlib import Path
+
+from app.services.pdf_parser import detect_document_type, extract_wage_grid, parse_and_calculate, regex_extract
 from tests.pdf_fixtures import INSURANCE_LINES, Z3_LINES, ZAM_LINES, ZUR_LINES, make_pdf
 
 
@@ -109,6 +111,66 @@ def test_contest_filenames_calculate_without_hash(params, monkeypatch):
             assert mat.weeks == 8
         elif kind == "rate":
             assert any(item.code == "macierzynski_po_ustaniu" for item in result.calculation.pregnancy)
+
+
+Z3_WAGE_OCR = """
+Informacje o skladnikach wynagrodzenia
+Stale wynagrodzenie zasadnicze
+2025 10 23 23 5700.00 13.71%
+2025 11 18 18 5700.00 13.71%
+2025 12 20 20 5700.00 13.71%
+2026 1 20 20 5700.00 13.71%
+"""
+
+
+def test_z3_wage_grid_averages_column_six():
+    assert extract_wage_grid(Z3_WAGE_OCR) == 5700.0
+    assert extract_wage_grid("brak tabeli") is None
+
+
+def test_z3_wage_grid_sets_base_not_5200(params, monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("LLM_API_KEY", raising=False)
+    pdf = make_pdf(
+        [
+            "Z-3",
+            "Informacje o skladnikach wynagrodzenia",
+            "Stale wynagrodzenie zasadnicze",
+            "2025 10 23 23 5700.00 13.71%",
+            "2025 11 18 18 5700.00 13.71%",
+            "2025 12 20 20 5700.00 13.71%",
+            "2026 1 20 20 5700.00 13.71%",
+            "umowa o prace",
+            "Data porodu: 01.03.2026",
+            "Liczba dzieci: 1",
+        ]
+    )
+    result = parse_and_calculate(
+        pdf,
+        params,
+        source_name="Wojciech Lu_4_zas. mac. za okres urlopu rodzicielskiego.pdf",
+    )
+    assert result.profile is not None
+    assert result.profile.benefit_base_pln == 5700.0
+    assert result.calculation.monthly_base_pln == 5700.0
+    parental = result.calculation.leaves[0]
+    expected = round(5700.0 * 0.7 * (41 / 4.345), 2)
+    fake = round(5200.0 * 0.7 * (41 / 4.345), 2)
+    assert parental.amount_pln == expected
+    assert parental.amount_pln != fake
+
+
+def test_wage_grid_from_screenshot_ocr():
+    png = Path(__file__).parent / "fixtures" / "zus-wage-table-5700.png"
+    if not png.exists():
+        return
+    try:
+        from rapidocr_onnxruntime import RapidOCR
+    except ImportError:
+        return
+    rows, _elapsed = RapidOCR()(str(png))
+    text = " ".join(str(row[1]) for row in rows or [])
+    assert extract_wage_grid(text) == 5700.0
 
 
 def test_wojciech_parental_uses_pdf_base_not_kod_b(params, monkeypatch):
