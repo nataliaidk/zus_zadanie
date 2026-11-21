@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
+from fastapi.staticfiles import StaticFiles
 
 from app.models.schemas import AdminParams, ChatRequest, ExplainRequest, ParentProfile
 from app.services.chat_service import ChatService
@@ -135,3 +136,17 @@ async def api_sim(kind: str, request: Request):
         return simulate(kind, profile)
     except KeyError as exc:
         raise HTTPException(status_code=404, detail="Nieznana symulacja.") from exc
+
+
+def _frontend_out() -> Path:
+    return Path(__file__).resolve().parents[2] / "frontend" / "out"
+
+
+@app.get("/api/health")
+def api_health():
+    return {"ok": True, "ui": _frontend_out().is_dir()}
+
+
+_ui = _frontend_out()
+if _ui.is_dir():
+    app.mount("/", StaticFiles(directory=_ui, html=True), name="ui")
