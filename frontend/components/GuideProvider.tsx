@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { calculate, explain as explainApi } from "@/lib/api";
-import { DEMO_PROFILES } from "@/lib/profiles";
+import { findAccountById, findAccountByLogin, type AuthUser } from "@/lib/auth";
 import { useParentPlan } from "@/hooks/useParentPlan";
 import type {
   A11yState,
@@ -14,7 +14,10 @@ import type {
 
 type GuideContextValue = {
   profileId: ProfileId;
-  setProfileId: (id: ProfileId) => void;
+  user: AuthUser | null;
+  loginPue: (login: string, password: string) => boolean;
+  loginMobywatel: (id: string) => boolean;
+  logout: () => void;
   profile: ParentProfile | null;
   calculation: CalculationResult | null;
   loading: boolean;
@@ -31,7 +34,8 @@ type GuideContextValue = {
 const GuideContext = createContext<GuideContextValue | null>(null);
 
 export function GuideProvider({ children }: { children: React.ReactNode }) {
-  const [profileId, setProfileIdState] = useState<ProfileId>("guest");
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [profileId, setProfileId] = useState<ProfileId>("guest");
   const [profile, setProfile] = useState<ParentProfile | null>(null);
   const [calculation, setCalculation] = useState<CalculationResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -57,15 +61,7 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
     root.classList.toggle("scale-150", a11y.fontScale === 150);
   }, [a11y]);
 
-  const loadDemo = useCallback(async (id: ProfileId) => {
-    if (id === "guest" || id === "custom") {
-      if (id === "guest") {
-        setProfile(null);
-        setCalculation(null);
-      }
-      return;
-    }
-    const next = DEMO_PROFILES[id];
+  const loadProfile = useCallback(async (next: ParentProfile) => {
     setProfile(next);
     setLoading(true);
     setError(null);
@@ -78,9 +74,45 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  function setProfileId(id: ProfileId) {
-    setProfileIdState(id);
-    void loadDemo(id);
+  const loginPue = useCallback(
+    (login: string, password: string) => {
+      const account = findAccountByLogin(login, password);
+      if (!account) return false;
+      setUser({
+        id: account.id,
+        displayName: account.displayName,
+        peselMasked: account.peselMasked,
+        method: "pue",
+      });
+      setProfileId(account.id);
+      void loadProfile(account.profile);
+      return true;
+    },
+    [loadProfile],
+  );
+
+  const loginMobywatel = useCallback(
+    (id: string) => {
+      const account = findAccountById(id);
+      if (!account) return false;
+      setUser({
+        id: account.id,
+        displayName: account.displayName,
+        peselMasked: account.peselMasked,
+        method: "mobywatel",
+      });
+      setProfileId(account.id);
+      void loadProfile(account.profile);
+      return true;
+    },
+    [loadProfile],
+  );
+
+  function logout() {
+    setUser(null);
+    setProfileId("guest");
+    setProfile(null);
+    setCalculation(null);
   }
 
   function setA11y(patch: Partial<A11yState>) {
@@ -88,7 +120,7 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   }
 
   function applyResult(nextProfile: ParentProfile, result: CalculationResult) {
-    setProfileIdState("custom");
+    setProfileId("custom");
     setProfile(nextProfile);
     setCalculation(result);
   }
@@ -100,7 +132,10 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(
     () => ({
       profileId,
-      setProfileId,
+      user,
+      loginPue,
+      loginMobywatel,
+      logout,
       profile,
       calculation,
       loading,
@@ -113,7 +148,19 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
       closeExplanation: () => setExplanation(null),
       plan,
     }),
-    [a11y, calculation, error, explanation, loading, plan, profile, profileId],
+    [
+      a11y,
+      calculation,
+      error,
+      explanation,
+      loading,
+      loginMobywatel,
+      loginPue,
+      plan,
+      profile,
+      profileId,
+      user,
+    ],
   );
 
   return <GuideContext.Provider value={value}>{children}</GuideContext.Provider>;

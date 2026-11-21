@@ -2,50 +2,36 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { chat } from "@/lib/api";
-import type { CalculationResult, ChatButton, ChatCitation, ParentProfile } from "@/lib/types";
+import type { ChatButton, ChatCitation } from "@/lib/types";
 
-export function useGuidedChat(onResult?: (profile: ParentProfile, result: CalculationResult) => void) {
+export type ChatLine = {
+  role: "user" | "assistant";
+  text: string;
+  citations?: ChatCitation[];
+};
+
+export function useGuidedChat() {
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [question, setQuestion] = useState<string | null>(null);
-  const [helper, setHelper] = useState<string | null>(null);
+  const [lines, setLines] = useState<ChatLine[]>([]);
   const [buttons, setButtons] = useState<ChatButton[]>([]);
-  const [answer, setAnswer] = useState<string | null>(null);
-  const [citations, setCitations] = useState<ChatCitation[]>([]);
-  const [complete, setComplete] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const started = useRef(false);
 
-  const apply = useCallback(
-    (body: Awaited<ReturnType<typeof chat>>) => {
-      setSessionId(body.session_id);
-      setQuestion(body.question);
-      setHelper(body.helper);
-      setButtons(body.buttons ?? []);
-      setAnswer(body.answer);
-      setCitations(body.citations ?? []);
-      setComplete(body.complete);
-      if (body.complete && body.calculation && body.profile) {
-        onResult?.(body.profile as ParentProfile, body.calculation);
-      }
-    },
-    [onResult],
-  );
-
   const start = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setComplete(false);
-    setAnswer(null);
-    setCitations([]);
     try {
-      apply(await chat({ action: "start" }));
+      const body = await chat({ action: "start" });
+      setSessionId(body.session_id);
+      setButtons(body.buttons ?? []);
+      setLines(body.answer ? [{ role: "assistant", text: body.answer, citations: body.citations }] : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Czat nie działa.");
     } finally {
       setLoading(false);
     }
-  }, [apply]);
+  }, []);
 
   useEffect(() => {
     if (started.current) return;
@@ -53,55 +39,37 @@ export function useGuidedChat(onResult?: (profile: ParentProfile, result: Calcul
     void start();
   }, [start]);
 
-  const answerButton = useCallback(
-    async (buttonId: string) => {
+  const send = useCallback(
+    async (opts: { message?: string; button_id?: string; label?: string }) => {
       if (!sessionId) return;
+      const userText = opts.label ?? opts.message ?? "";
+      if (userText) {
+        setLines((prev) => [...prev, { role: "user", text: userText }]);
+      }
       setLoading(true);
       setError(null);
       try {
-        apply(await chat({ session_id: sessionId, action: "answer", button_id: buttonId }));
+        const body = await chat({
+          session_id: sessionId,
+          action: opts.button_id && !opts.message ? "answer" : "question",
+          button_id: opts.button_id,
+          message: opts.message,
+        });
+        setButtons(body.buttons ?? []);
+        if (body.answer) {
+          setLines((prev) => [
+            ...prev,
+            { role: "assistant", text: body.answer as string, citations: body.citations },
+          ]);
+        }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Nie udało się zapisać odpowiedzi.");
+        setError(err instanceof Error ? err.message : "Nie udało się wysłać wiadomości.");
       } finally {
         setLoading(false);
       }
     },
-    [apply, sessionId],
+    [sessionId],
   );
 
-  const ask = useCallback(
-    async (message: string) => {
-      if (!sessionId || !message.trim()) return;
-      setLoading(true);
-      setError(null);
-      try {
-        apply(
-          await chat({
-            session_id: sessionId,
-            action: question && !buttons.length ? "answer" : "question",
-            message: message.trim(),
-          }),
-        );
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Nie udało się zadać pytania.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [apply, buttons.length, question, sessionId],
-  );
-
-  return {
-    question,
-    helper,
-    buttons,
-    answer,
-    citations,
-    complete,
-    loading,
-    error,
-    start,
-    answerButton,
-    ask,
-  };
+  return { lines, buttons, loading, error, start, send };
 }

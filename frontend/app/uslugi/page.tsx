@@ -8,7 +8,7 @@ import { runSim } from "@/lib/api";
 import { LINKS } from "@/lib/copy";
 
 const ACTIONS = [
-  { kind: "mobywatel", label: "Zaloguj (symulacja mObywatel)" },
+  { kind: "mobywatel", label: "Pobierz dane z mObywatel" },
   { kind: "insurance", label: "Pobierz ubezpieczenie z ZUS" },
   { kind: "arrears", label: "Zaświadczenie o zaległościach (JDG)" },
   { kind: "ezla", label: "e-ZLA kod B" },
@@ -33,9 +33,9 @@ export default function UslugiPage() {
 
   return (
     <AppShell aside={<DecisionCard />}>
-      <h1>Usługi — tylko symulacja</h1>
+      <h1>Usługi elektroniczne</h1>
       <p className="note mt-2">
-        Nic nie idzie do prawdziwego ZUS, mObywatela ani PUE. Juror widzi, jak wyglądałby przepływ.
+        Te czynności są pokazane tak, jak wyglądałyby na koncie — nic nie jest wysyłane do ZUS.
       </p>
       <div className="mt-4 grid gap-3">
         {ACTIONS.map((item) => (

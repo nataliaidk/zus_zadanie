@@ -2,22 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { COPY, LINKS } from "@/lib/copy";
-import { PROFILE_BUTTONS, profileLabel } from "@/lib/profiles";
+import { LoginDialog } from "./LoginDialog";
 import { useGuide } from "./GuideProvider";
 
 const NAV = [
   { href: "/", label: "Start" },
   { href: "/kalkulator", label: "Kalkulator" },
   { href: "/plan", label: "Plan urlopów" },
-  { href: "/ciaza", label: "Ciąża" },
+  { href: "/ciaza", label: "Zasiłek w ciąży" },
   { href: "/dokumenty", label: "Dokumenty" },
   { href: "/uslugi", label: "Usługi" },
   { href: "/wsparcie", label: "Wsparcie" },
-  { href: "/ryzyka", label: "Ryzyka" },
   { href: "/mapa", label: "Przepisy" },
-  { href: "/juror", label: "Juror" },
-  { href: "/admin", label: "Admin" },
 ];
 
 export function AppShell({
@@ -28,21 +26,22 @@ export function AppShell({
   aside?: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { profileId, setProfileId, a11y, setA11y, loading, error } = useGuide();
+  const { user, logout, a11y, setA11y, loading, error } = useGuide();
+  const [loginOpen, setLoginOpen] = useState(false);
 
   return (
     <div className="min-h-screen">
       <a href="#tresc" className="skip-link control border bg-[var(--bg-card)] p-4">
         Przejdź do treści
       </a>
-      <div className="topbar">
-        <p>Przewodnik po urlopach i zasiłkach — listopad 2026</p>
+      <div className="gov-bar">
+        <p>Wersja demonstracyjna · stan prawny listopad 2026</p>
         <div className="chip-row">
           {([100, 125, 150] as const).map((scale) => (
             <button
               key={scale}
               type="button"
-              className="control"
+              className="control ghost"
               aria-pressed={a11y.fontScale === scale}
               onClick={() => setA11y({ fontScale: scale })}
             >
@@ -51,22 +50,46 @@ export function AppShell({
           ))}
           <button
             type="button"
-            className="control"
+            className="control ghost"
             aria-pressed={a11y.highContrast}
             onClick={() => setA11y({ highContrast: !a11y.highContrast })}
           >
             Wysoki kontrast
+          </button>
+          <button
+            type="button"
+            className="control ghost"
+            aria-pressed={a11y.language === "plain"}
+            onClick={() => setA11y({ language: "plain" })}
+          >
+            Prosty język
+          </button>
+          <button
+            type="button"
+            className="control ghost"
+            aria-pressed={a11y.language === "legal"}
+            onClick={() => setA11y({ language: "legal" })}
+          >
+            Podstawa prawna
+          </button>
+          <button
+            type="button"
+            className="control ghost"
+            aria-pressed={a11y.hardSituation}
+            onClick={() => setA11y({ hardSituation: !a11y.hardSituation })}
+          >
+            {COPY.hardMode}
           </button>
         </div>
       </div>
       <header className="site-header">
         <Link href="/" className="brand">
           <span className="brand-mark" aria-hidden="true">
-            rd
+            Z
           </span>
           <span>
             <strong className="block leading-tight">{COPY.appTitle}</strong>
-            <span className="block text-sm font-normal">dla przyszłych rodziców</span>
+            <span className="block text-sm font-normal">przyszłego rodzica</span>
           </span>
         </Link>
         <nav aria-label="Główne">
@@ -84,57 +107,25 @@ export function AppShell({
             ))}
           </ul>
         </nav>
-        <div className="chip-row">
-          <button
-            type="button"
-            className="control"
-            aria-pressed={a11y.language === "plain"}
-            onClick={() => setA11y({ language: "plain" })}
-          >
-            Prosty język
-          </button>
-          <button
-            type="button"
-            className="control"
-            aria-pressed={a11y.language === "legal"}
-            onClick={() => setA11y({ language: "legal" })}
-          >
-            Podstawa prawna
-          </button>
-        </div>
-      </header>
-      <div className="wrap">
-        <div className="sim-bar" role="group" aria-label="Symulacja logowania">
-          <p className="mb-3 text-sm">
-            Profil: <strong>{profileLabel(profileId)}</strong> — to tylko symulacja, nie logujemy do ZUS.
-          </p>
-          <div className="chip-row">
-            {PROFILE_BUTTONS.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className="control"
-                aria-pressed={profileId === item.id}
-                onClick={() => setProfileId(item.id)}
-              >
-                {item.label}
-                <span className="block text-sm font-normal">{item.hint}</span>
-              </button>
-            ))}
-            <button
-              type="button"
-              className="control"
-              aria-pressed={a11y.hardSituation}
-              onClick={() => setA11y({ hardSituation: !a11y.hardSituation })}
-            >
-              {COPY.hardMode}
+        {user ? (
+          <div className="session">
+            <p>
+              <span className="sr-only">Zalogowano: </span>
+              <strong>{user.displayName}</strong>
+              <span className="block text-sm font-normal">
+                {user.method === "pue" ? "PUE ZUS" : "mObywatel"} · PESEL {user.peselMasked}
+              </span>
+            </p>
+            <button type="button" className="control" onClick={logout}>
+              Wyloguj
             </button>
           </div>
-          {a11y.hardSituation ? (
-            <p className="mt-3">Tryb wyciszony. Bez grafik. Możesz wrócić do zwykłego widoku w każdej chwili.</p>
-          ) : null}
-        </div>
-      </div>
+        ) : (
+          <button type="button" className="btn-primary control" onClick={() => setLoginOpen(true)}>
+            Zaloguj się
+          </button>
+        )}
+      </header>
       <p className="sr-only" aria-live="polite">
         {loading ? "Liczenie zasiłku…" : error ? error : ""}
       </p>
@@ -168,15 +159,25 @@ export function AppShell({
             </ul>
           </div>
           <div>
-            <h2>Wniosek ZAM</h2>
-            <p>Od 24.10.2026 ZAM zastępuje ZUR, ZAO i Z-3b. Nie składaj starych formularzy.</p>
+            <h2>Autor strony</h2>
+            <p>{COPY.author}</p>
           </div>
           <div>
-            <h2>Symulacja</h2>
-            <p>mObywatel, PUE i wnioski tutaj nic nie wysyłają do ZUS.</p>
+            <h2>Kod źródłowy</h2>
+            <p>
+              <a href={COPY.github} rel="noreferrer">
+                github.com/nataliaidk/zus_zadanie
+              </a>
+            </p>
+            <p className="mt-4">
+              <Link href="/juror">Dla jurorów</Link>
+              {" · "}
+              <Link href="/admin">Admin</Link>
+            </p>
           </div>
         </div>
       </footer>
+      {loginOpen ? <LoginDialog onClose={() => setLoginOpen(false)} /> : null}
     </div>
   );
 }

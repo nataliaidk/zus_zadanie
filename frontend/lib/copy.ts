@@ -1,11 +1,13 @@
 export const COPY = {
   appTitle: "Zasiłkowy przewodnik",
-  heroTitle: "Spokojnie. Ułóżmy Twój",
-  heroAccent: "plan urlopów",
+  heroTitle: "Powiedz, co się dzieje.",
+  heroAccent: "Podpowiem, co zrobić.",
   heroLead:
-    "Odpowiedz na kilka prostych pytań. Pokażemy, co Ci przysługuje, ile to jest i jakie dokumenty złożyć.",
-  badge: "Stan prawny: listopad 2026 · to nie jest prawdziwy ZUS",
+    "Napisz swoją sytuację zwykłymi słowami. Pokażę, jaki urlop i wniosek Ci przysługują — bez urzędniczego żargonu.",
+  badge: "Stan prawny: listopad 2026",
   hardMode: "Trudna sytuacja",
+  author: "Natalia Marszałek",
+  github: "https://github.com/nataliaidk/zus_zadanie",
 };
 
 export const LINKS = [

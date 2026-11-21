@@ -17,7 +17,7 @@ export default function PlanPage() {
 
       {!profile ? (
         <p className="note mt-4">
-          Wybierz profil Anny, Piotra albo Kasi albo dokończ czat na Start.
+          Zaloguj się albo policz zasiłek w kalkulatorze — wtedy tu pojawi się podział urlopów.
         </p>
       ) : null}
 
@@ -106,7 +106,7 @@ export default function PlanPage() {
         ))}
       </ul>
       <p className="mt-4">
-        Skąd ten wynik? — użyj przycisków na karcie po prawej (ścieżka grafu wiedzy).
+        Chcesz zobaczyć podstawę prawną? Użyj przycisków na karcie po prawej.
       </p>
     </AppShell>
   );

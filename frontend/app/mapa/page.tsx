@@ -21,7 +21,7 @@ export default function MapaPage() {
         setEdges(body.edges);
       })
       .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : "Graf nie wczytany.");
+        setError(err instanceof Error ? err.message : "Nie udało się wczytać przepisów.");
       });
   }, []);
 
@@ -29,10 +29,10 @@ export default function MapaPage() {
 
   return (
     <AppShell>
-      <h1 className="font-semibold">Mapa przepisów</h1>
+      <h1 className="font-semibold">Przepisy</h1>
       <p className="mt-2">
-        Typ węzła jest napisany słowem (Status, Przepis...), nie samym kolorem. Kliknięcie otwiera
-        ścieżkę „Skąd ten wynik?”.
+        Przegląd reguł, z których korzysta przewodnik (stan na listopad 2026). Typ jest napisany
+        słowem, nie samym kolorem.
       </p>
       {error ? <p className="mt-4">{error}</p> : null}
 
@@ -59,7 +59,7 @@ export default function MapaPage() {
       ))}
 
       <table className="mt-4 w-full border-collapse border">
-        <caption className="p-2 text-left">Węzły grafu — tabela dostępna</caption>
+        <caption className="p-2 text-left">Przepisy — tabela dostępna</caption>
         <thead>
           <tr>
             <th className="border p-2 text-left">Typ</th>
@@ -85,7 +85,7 @@ export default function MapaPage() {
       </table>
 
       <table className="mt-4 w-full border-collapse border">
-        <caption className="p-2 text-left">Krawędzie</caption>
+        <caption className="p-2 text-left">Powiązania między przepisami</caption>
         <thead>
           <tr>
             <th className="border p-2 text-left">Od</th>

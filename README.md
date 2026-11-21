@@ -17,7 +17,7 @@ Otwórz **http://127.0.0.1:8000**
 - Jeśli jest Docker: `docker compose up --build` (to samo, port 8000).
 - Bez Dockera: skrypt sam stawia venv, buduje UI i serwuje API + stronę razem.
 
-Profil: Niezalogowany / Anna / Piotr / Kasia. Juror PDF: **/juror** albo `GET /api/samples/{id}/pdf`.
+Logowanie (demonstracja): PUE `anna.nowak` / `HasloAnna1` albo mObywatel w nagłówku. Juror PDF: **/juror**.
 
 ## Wdrożenie publiczne (Vercel)
 

@@ -23,11 +23,8 @@ export function ExplainPanel({
           <li key={`${index}-${line}`}>{line}</li>
         ))}
       </ol>
-      <p className="mt-4">
-        Ścieżka: {explanation.path.join(" → ")}
-      </p>
       <table className="mt-4 w-full border-collapse border">
-        <caption className="p-2 text-left font-semibold">Węzły na ścieżce</caption>
+        <caption className="p-2 text-left font-semibold">Przepisy</caption>
         <thead>
           <tr>
             <th className="border p-2 text-left">Typ</th>

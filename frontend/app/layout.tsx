@@ -11,7 +11,7 @@ const font = Source_Sans_3({
 
 export const metadata: Metadata = {
   title: "Zasiłkowy Przewodnik Przyszłego Rodzica",
-  description: "Urlopy i zasiłki dla rodziców. Stan prawny: listopad 2026. Symulacja — nie jest to ZUS.",
+  description: "Urlopy i zasiłki dla przyszłych rodziców. Stan prawny: listopad 2026.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

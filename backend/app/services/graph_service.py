@@ -120,7 +120,7 @@ class GraphService:
             node_ids, edge_pairs = self.neighborhood(node_id, depth)
             narrative = [
                 self.graph.nodes[node_id]["plain_language"],
-                "Brak jednej ścieżki od przepisu — poniżej sąsiedztwo węzła.",
+                "Brak jednej ścieżki od przepisu — poniżej powiązane przepisy.",
             ]
 
         nodes = [_node_out(self.graph, n) for n in node_ids]

@@ -39,8 +39,8 @@ export function DecisionCard() {
           <div className="step">
             <span className="step-n">2</span>
             <p>
-              <strong>Rodzina</strong>
-              <span className="block text-sm">Dzieci, adopcja, Za życiem</span>
+              <strong>Twoja sytuacja</strong>
+              <span className="block text-sm">Ciąża, poród, adopcja, Za życiem</span>
             </p>
           </div>
           <div className="step">
@@ -71,10 +71,7 @@ export function DecisionCard() {
                   <strong>{item.title}</strong>
                   {item.weeks != null ? ` — ${item.weeks} tyg.` : null}
                   {item.amount_pln != null ? ` · ${pln(item.amount_pln)}` : null}
-                  <span className="block text-sm">
-                    {a11y.language === "legal" ? `Węzeł: ${item.graph_node_id}. ` : ""}
-                    {item.plain_language}
-                  </span>
+                  <span className="block text-sm">{item.plain_language}</span>
                 </p>
               </li>
             ))}
@@ -119,7 +116,7 @@ export function DecisionCard() {
                   </p>
                   <p>{risk.plain_language}</p>
                   <button type="button" className="control mt-2" onClick={() => void explainNode(risk.graph_node_id)}>
-                    Skąd ten wynik?
+                    Podstawa prawna
                   </button>
                 </li>
               ))}
