@@ -1,0 +1,1 @@
+"""Zasiłkowy Przewodnik — FastAPI backend."""

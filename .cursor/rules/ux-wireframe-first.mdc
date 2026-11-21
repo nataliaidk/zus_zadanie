@@ -1,0 +1,14 @@
+---
+description: UX wireframe-first. No decorative UI; headless hooks only.
+alwaysApply: true
+---
+
+# UX wireframe-first
+
+Do not design destination UI. No decorative gradients, shadows, custom animations, or heavy CSS.
+
+Tailwind only: grid/flex layout, `border`, spacing `p-4`/`gap-4`, and `:focus-visible`.
+
+One decision per step (progressive disclosure). Plain-language microcopy. Poka-yoke: block illegal leave combinations and explain why (e.g. first 14 weeks are mother-only).
+
+Headless UX: keep step, validation, state, and copy logic in `useParentPlan` and `useGuidedChat`.

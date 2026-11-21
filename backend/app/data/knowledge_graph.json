@@ -1,0 +1,361 @@
+{
+  "legal_as_of": "2026-11",
+  "nodes": [
+    {
+      "id": "status_umowa_o_prace",
+      "type": "status_ubezpieczenia",
+      "title": "Umowa o pracę",
+      "plain_language": "Pracujesz na umowie o pracę. Ubezpieczenie chorobowe jest obowiązkowe.",
+      "legal_basis": "Ustawa zasiłkowa 2026; Kodeks pracy 2026"
+    },
+    {
+      "id": "status_zlecenie",
+      "type": "status_ubezpieczenia",
+      "title": "Umowa zlecenie",
+      "plain_language": "Pracujesz na zleceniu. Ubezpieczenie chorobowe jest dobrowolne.",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "status_jdg",
+      "type": "status_ubezpieczenia",
+      "title": "JDG",
+      "plain_language": "Prowadzisz działalność. Ubezpieczenie chorobowe jest dobrowolne.",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "status_b2b",
+      "type": "status_ubezpieczenia",
+      "title": "B2B",
+      "plain_language": "Rozliczasz się jako firma (B2B). Ubezpieczenie chorobowe jest dobrowolne. Zaległości składek mogą zablokować zasiłek.",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "status_duzy_platnik",
+      "type": "status_ubezpieczenia",
+      "title": "Duży płatnik (powyżej 20 ubezpieczonych)",
+      "plain_language": "Twój pracodawca sam liczy i wypłaca zasiłek, jeśli zgłaszał powyżej 20 osób na 30 listopada poprzedniego roku.",
+      "legal_basis": "Ustawa zasiłkowa 2026 — płatnik powyżej 20 ubezpieczonych"
+    },
+    {
+      "id": "status_maly_platnik",
+      "type": "status_ubezpieczenia",
+      "title": "Mniejszy płatnik",
+      "plain_language": "Zasiłek wypłaca ZUS. Pracodawca przekazuje Z-3 (umowa o pracę) albo Z-3a (zlecenie).",
+      "legal_basis": "Ustawa zasiłkowa 2026 — płatnik do 20 ubezpieczonych"
+    },
+    {
+      "id": "status_za_zyciem",
+      "type": "status_ubezpieczenia",
+      "title": "Zaświadczenie „Za życiem”",
+      "plain_language": "Dłuższy urlop rodzicielski: 65 tygodni (jedno dziecko) albo 67 tygodni (więcej dzieci).",
+      "legal_basis": "Ustawa „Za życiem”; Kodeks pracy 2026"
+    },
+    {
+      "id": "status_wczesniak",
+      "type": "status_ubezpieczenia",
+      "title": "Wcześniak lub hospitalizacja po porodzie",
+      "plain_language": "Po urlopie macierzyńskim możesz wziąć jednorazowo uzupełniający urlop macierzyński (100% zasiłku).",
+      "legal_basis": "Kodeks pracy 2026 — uzupełniający urlop macierzyński"
+    },
+    {
+      "id": "status_niepelnny_etat",
+      "type": "status_ubezpieczenia",
+      "title": "Praca na część etatu",
+      "plain_language": "Długość urlopu się nie skraca. Kwota zasiłku może być niższa, bo liczy się od Twojego wynagrodzenia.",
+      "legal_basis": "Ustawa zasiłkowa 2026 — podstawa wymiaru"
+    },
+    {
+      "id": "status_zaleglosci_skladek",
+      "type": "status_ubezpieczenia",
+      "title": "Zaległości składek B2B/JDG",
+      "plain_language": "Nieopłacone składki mogą sprawić, że ZUS nie wypłaci zasiłku.",
+      "legal_basis": "Ustawa zasiłkowa 2026 — prawo do świadczeń"
+    },
+    {
+      "id": "zdarzenie_ciaza",
+      "type": "zdarzenie",
+      "title": "Ciąża (zasiłek chorobowy, kod B)",
+      "plain_language": "W ciąży zasiłek chorobowy wynosi 100% podstawy, maksymalnie 270 dni, po okresie wyczekiwania.",
+      "legal_basis": "Ustawa zasiłkowa 2026 — zasiłek chorobowy w ciąży"
+    },
+    {
+      "id": "zdarzenie_porod_jedno_dziecko",
+      "type": "zdarzenie",
+      "title": "Poród jednego dziecka",
+      "plain_language": "Urlop macierzyński trwa 20 tygodni. Urlop rodzicielski — 41 tygodni (65 z „Za życiem”).",
+      "legal_basis": "Kodeks pracy 2026 art. urlop macierzyński i rodzicielski"
+    },
+    {
+      "id": "zdarzenie_porod_wieloraczki",
+      "type": "zdarzenie",
+      "title": "Poród wieloraczków",
+      "plain_language": "Urlop macierzyński trwa 31–37 tygodni (zależnie od liczby dzieci). Urlop rodzicielski — 43 tygodnie (67 z „Za życiem”).",
+      "legal_basis": "Kodeks pracy 2026 — wymiar urlopu przy więcej niż jednym dziecku"
+    },
+    {
+      "id": "zdarzenie_wniosek_do_21_dni",
+      "type": "zdarzenie",
+      "title": "Wniosek matki w ciągu 21 dni po porodzie",
+      "plain_language": "Jeśli złożysz wniosek nie później niż 21 dni po porodzie, zasiłek za macierzyński i rodzicielski wynosi 81,5% za całość.",
+      "legal_basis": "Ustawa zasiłkowa 2026 — stawka 81,5%"
+    },
+    {
+      "id": "zdarzenie_wniosek_po_21_dniach",
+      "type": "zdarzenie",
+      "title": "Wniosek później niż 21 dni po porodzie",
+      "plain_language": "Macierzyński, uzupełniający i ojcowski: 100%. Rodzicielski: 70%.",
+      "legal_basis": "Ustawa zasiłkowa 2026 — stawki 100% i 70%"
+    },
+    {
+      "id": "swiadczenie_chorobowe_ciaza",
+      "type": "swiadczenie",
+      "title": "Zasiłek chorobowy w ciąży",
+      "plain_language": "100% podstawy, kod B, maksymalnie 270 dni — po 30 albo 90 dniach wyczekiwania.",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "swiadczenie_macierzynski",
+      "type": "swiadczenie",
+      "title": "Zasiłek macierzyński (urlop macierzyński)",
+      "plain_language": "20 tygodni przy jednym dziecku albo 31–37 tygodni przy więcej dzieciach. Pierwsze 14 tygodni są dla matki.",
+      "legal_basis": "Kodeks pracy 2026; Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "swiadczenie_uzupelniajacy",
+      "type": "swiadczenie",
+      "title": "Uzupełniający urlop macierzyński",
+      "plain_language": "Jednorazowo, od razu po macierzyńskim, dla wcześniaków lub dzieci w szpitalu po porodzie. Zasiłek 100%.",
+      "legal_basis": "Kodeks pracy 2026; Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "swiadczenie_rodzicielski",
+      "type": "swiadczenie",
+      "title": "Urlop rodzicielski",
+      "plain_language": "41 albo 43 tygodnie (65 albo 67 z „Za życiem”). Każdy rodzic ma 9 tygodni tylko dla siebie. Najwyżej 5 części do końca roku, w którym dziecko skończy 6 lat.",
+      "legal_basis": "Kodeks pracy 2026; Ustawa „Za życiem”"
+    },
+    {
+      "id": "swiadczenie_ojcowski",
+      "type": "swiadczenie",
+      "title": "Urlop ojcowski",
+      "plain_language": "14 dni kalendarzowych (2 tygodnie) do ukończenia przez dziecko 12 miesięcy. Zasiłek 100%.",
+      "legal_basis": "Kodeks pracy 2026; Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "swiadczenie_stawka_100",
+      "type": "swiadczenie",
+      "title": "Stawka 100%",
+      "plain_language": "Pełny zasiłek: macierzyński, uzupełniający i ojcowski (gdy nie wybrano 81,5% za całość).",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "swiadczenie_stawka_70",
+      "type": "swiadczenie",
+      "title": "Stawka 70%",
+      "plain_language": "Urlop rodzicielski, jeśli wniosek nie był złożony w ciągu 21 dni po porodzie.",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "swiadczenie_stawka_815",
+      "type": "swiadczenie",
+      "title": "Stawka 81,5%",
+      "plain_language": "Jedna stawka za macierzyński i rodzicielski, gdy matka złoży wniosek nie później niż 21 dni po porodzie.",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "dokument_zam",
+      "type": "dokument",
+      "title": "Wniosek ZAM",
+      "plain_language": "Jeden wniosek o zasiłek macierzyński. Od 24 października 2026 zastępuje ZUR, ZAO i Z-3b.",
+      "legal_basis": "Rozporządzenie o wnioskach rodzicielskich; stan na 24.10.2026"
+    },
+    {
+      "id": "dokument_z3",
+      "type": "dokument",
+      "title": "Zaświadczenie Z-3",
+      "plain_language": "Pracodawca (umowa o pracę) przekazuje Z-3 do ZUS, gdy sam nie wypłaca zasiłku.",
+      "legal_basis": "Ustawa zasiłkowa 2026 — dokumentacja płatnika"
+    },
+    {
+      "id": "dokument_z3a",
+      "type": "dokument",
+      "title": "Zaświadczenie Z-3a",
+      "plain_language": "Zleceniodawca przekazuje Z-3a do ZUS, gdy sam nie wypłaca zasiłku.",
+      "legal_basis": "Ustawa zasiłkowa 2026 — dokumentacja płatnika"
+    },
+    {
+      "id": "dokument_za_zyciem",
+      "type": "dokument",
+      "title": "Zaświadczenie „Za życiem”",
+      "plain_language": "Potrzebne, żeby dostać dłuższy urlop rodzicielski.",
+      "legal_basis": "Ustawa „Za życiem”"
+    },
+    {
+      "id": "dokument_zniesione_zur_zao_z3b",
+      "type": "dokument",
+      "title": "ZUR, ZAO, Z-3b — zniesione",
+      "plain_language": "Te druki nie obowiązują. Nie składaj ich. Zamiast nich jest ZAM.",
+      "legal_basis": "Zmiana formularzy od 24 października 2026 r."
+    },
+    {
+      "id": "ryzyko_wyczekiwanie_30",
+      "type": "ryzyko",
+      "title": "Wyczekiwanie 30 dni",
+      "plain_language": "Przy umowie o pracę zasiłek chorobowy w ciąży przysługuje po 30 dniach ubezpieczenia.",
+      "legal_basis": "Ustawa zasiłkowa 2026 — okres wyczekiwania, ubezpieczenie obowiązkowe"
+    },
+    {
+      "id": "ryzyko_wyczekiwanie_90",
+      "type": "ryzyko",
+      "title": "Wyczekiwanie 90 dni",
+      "plain_language": "Przy zleceniu, JDG i B2B zasiłek chorobowy w ciąży przysługuje po 90 dniach ubezpieczenia.",
+      "legal_basis": "Ustawa zasiłkowa 2026 — okres wyczekiwania, ubezpieczenie dobrowolne"
+    },
+    {
+      "id": "ryzyko_14_tygodni_matka",
+      "type": "ryzyko",
+      "title": "Pierwsze 14 tygodni tylko dla matki",
+      "plain_language": "Nie można oddać drugiemu rodzicowi pierwszych 14 tygodni urlopu macierzyńskiego (wyjątki: szpital, niezdolność do samodzielnej egzystencji, zgon lub porzucenie).",
+      "legal_basis": "Kodeks pracy 2026 — obowiązkowy urlop matki"
+    },
+    {
+      "id": "ryzyko_9_tygodni_nieprzenoszalne",
+      "type": "ryzyko",
+      "title": "9 tygodni nieprzenoszalnych",
+      "plain_language": "Każdy rodzic ma 9 tygodni urlopu rodzicielskiego tylko dla siebie. Nie oddasz ich partnerowi.",
+      "legal_basis": "Kodeks pracy 2026 — nieprzenoszalna część urlopu rodzicielskiego"
+    },
+    {
+      "id": "ryzyko_zaleglosci_b2b",
+      "type": "ryzyko",
+      "title": "Zaległości składek",
+      "plain_language": "ZUS może odmówić zasiłku, dopóki składki nie są opłacone.",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "ryzyko_podstawa_niepelnny_etat",
+      "type": "ryzyko",
+      "title": "Niższa podstawa przy części etatu",
+      "plain_language": "Urlop trwa tyle samo, ale kwota zasiłku zależy od Twojego wynagrodzenia.",
+      "legal_basis": "Ustawa zasiłkowa 2026 — podstawa wymiaru"
+    },
+    {
+      "id": "ryzyko_termin_wniosku_21",
+      "type": "ryzyko",
+      "title": "Termin 21 dni na stawkę 81,5%",
+      "plain_language": "Po 21 dniach od porodu nie wybierzesz już 81,5% za całość. Zostaje 100% + 70%.",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "przepis_ustawa_zasilkowa",
+      "type": "przepis",
+      "title": "Ustawa zasiłkowa 2026",
+      "plain_language": "Ustawa o świadczeniach pieniężnych z ubezpieczenia społecznego w razie choroby i macierzyństwa (stan: listopad 2026).",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "przepis_kodeks_pracy",
+      "type": "przepis",
+      "title": "Kodeks pracy 2026",
+      "plain_language": "Wymiary urlopów: macierzyński, uzupełniający, rodzicielski, ojcowski.",
+      "legal_basis": "Kodeks pracy 2026"
+    },
+    {
+      "id": "przepis_za_zyciem",
+      "type": "przepis",
+      "title": "Ustawa „Za życiem”",
+      "plain_language": "Dłuższy urlop rodzicielski przy zaświadczeniu „Za życiem”.",
+      "legal_basis": "Ustawa „Za życiem”"
+    },
+    {
+      "id": "przepis_platnik_20",
+      "type": "przepis",
+      "title": "Próg 20 ubezpieczonych",
+      "plain_language": "Powyżej 20 ubezpieczonych (30 listopada roku poprzedniego) zasiłek płaci pracodawca. Inaczej ZUS.",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "przepis_formularze_zam",
+      "type": "przepis",
+      "title": "ZAM od 24.10.2026",
+      "plain_language": "ZUR, ZAO i Z-3b są zniesione. Aktywny wniosek to ZAM.",
+      "legal_basis": "Zmiana formularzy od 24 października 2026 r."
+    },
+    {
+      "id": "przepis_wyczekiwanie",
+      "type": "przepis",
+      "title": "Okres wyczekiwania 30/90 dni",
+      "plain_language": "30 dni przy ubezpieczeniu obowiązkowym (umowa o pracę). 90 dni przy dobrowolnym (zlecenie, JDG, B2B).",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    },
+    {
+      "id": "przepis_stawki",
+      "type": "przepis",
+      "title": "Stawki 100% / 70% / 81,5%",
+      "plain_language": "100% za macierzyński, uzupełniający i ojcowski. 70% za rodzicielski. Albo 81,5% za całość przy wniosku do 21 dni po porodzie.",
+      "legal_basis": "Ustawa zasiłkowa 2026"
+    }
+  ],
+  "edges": [
+    {"source": "przepis_wyczekiwanie", "target": "ryzyko_wyczekiwanie_30", "relation": "ustala", "plain_language": "Przepis o wyczekiwaniu daje 30 dni przy umowie o pracę."},
+    {"source": "przepis_wyczekiwanie", "target": "ryzyko_wyczekiwanie_90", "relation": "ustala", "plain_language": "Przepis o wyczekiwaniu daje 90 dni przy ubezpieczeniu dobrowolnym."},
+    {"source": "przepis_wyczekiwanie", "target": "status_umowa_o_prace", "relation": "dotyczy", "plain_language": "Umowa o pracę to ubezpieczenie obowiązkowe."},
+    {"source": "status_umowa_o_prace", "target": "ryzyko_wyczekiwanie_30", "relation": "wyznacza", "plain_language": "Umowa o pracę → 30 dni wyczekiwania."},
+    {"source": "status_zlecenie", "target": "ryzyko_wyczekiwanie_90", "relation": "wyznacza", "plain_language": "Zlecenie → 90 dni wyczekiwania."},
+    {"source": "status_jdg", "target": "ryzyko_wyczekiwanie_90", "relation": "wyznacza", "plain_language": "JDG → 90 dni wyczekiwania."},
+    {"source": "status_b2b", "target": "ryzyko_wyczekiwanie_90", "relation": "wyznacza", "plain_language": "B2B → 90 dni wyczekiwania."},
+    {"source": "ryzyko_wyczekiwanie_30", "target": "swiadczenie_chorobowe_ciaza", "relation": "warunek", "plain_language": "Najpierw 30 dni ubezpieczenia, potem zasiłek w ciąży."},
+    {"source": "ryzyko_wyczekiwanie_90", "target": "swiadczenie_chorobowe_ciaza", "relation": "warunek", "plain_language": "Najpierw 90 dni ubezpieczenia, potem zasiłek w ciąży."},
+    {"source": "zdarzenie_ciaza", "target": "swiadczenie_chorobowe_ciaza", "relation": "uprawnia", "plain_language": "Ciąża otwiera zasiłek chorobowy 100% (kod B)."},
+    {"source": "przepis_ustawa_zasilkowa", "target": "swiadczenie_chorobowe_ciaza", "relation": "podstawa_prawna", "plain_language": "Ustawa zasiłkowa ustala zasiłek w ciąży."},
+    {"source": "przepis_kodeks_pracy", "target": "swiadczenie_macierzynski", "relation": "podstawa_prawna", "plain_language": "Kodeks pracy ustala wymiar urlopu macierzyńskiego."},
+    {"source": "przepis_kodeks_pracy", "target": "swiadczenie_rodzicielski", "relation": "podstawa_prawna", "plain_language": "Kodeks pracy ustala urlop rodzicielski i 9 tygodni nieprzenoszalnych."},
+    {"source": "przepis_kodeks_pracy", "target": "swiadczenie_ojcowski", "relation": "podstawa_prawna", "plain_language": "Kodeks pracy ustala 14 dni urlopu ojcowskiego."},
+    {"source": "przepis_kodeks_pracy", "target": "swiadczenie_uzupelniajacy", "relation": "podstawa_prawna", "plain_language": "Kodeks pracy ustala uzupełniający urlop macierzyński."},
+    {"source": "przepis_kodeks_pracy", "target": "ryzyko_14_tygodni_matka", "relation": "ustala", "plain_language": "Pierwsze 14 tygodni są obowiązkowo dla matki."},
+    {"source": "przepis_kodeks_pracy", "target": "ryzyko_9_tygodni_nieprzenoszalne", "relation": "ustala", "plain_language": "9 tygodni urlopu rodzicielskiego nie przenosi się na drugiego rodzica."},
+    {"source": "zdarzenie_porod_jedno_dziecko", "target": "swiadczenie_macierzynski", "relation": "uprawnia", "plain_language": "Jedno dziecko → 20 tygodni macierzyńskiego."},
+    {"source": "zdarzenie_porod_wieloraczki", "target": "swiadczenie_macierzynski", "relation": "uprawnia", "plain_language": "Więcej dzieci → 31–37 tygodni macierzyńskiego."},
+    {"source": "zdarzenie_porod_jedno_dziecko", "target": "swiadczenie_rodzicielski", "relation": "uprawnia", "plain_language": "Jedno dziecko → 41 tygodni rodzicielskiego."},
+    {"source": "zdarzenie_porod_wieloraczki", "target": "swiadczenie_rodzicielski", "relation": "uprawnia", "plain_language": "Więcej dzieci → 43 tygodnie rodzicielskiego."},
+    {"source": "status_za_zyciem", "target": "swiadczenie_rodzicielski", "relation": "wydluza", "plain_language": "„Za życiem” wydłuża rodzicielski do 65 albo 67 tygodni."},
+    {"source": "przepis_za_zyciem", "target": "status_za_zyciem", "relation": "definiuje", "plain_language": "Ustawa „Za życiem” daje dłuższy urlop."},
+    {"source": "przepis_za_zyciem", "target": "dokument_za_zyciem", "relation": "wymaga", "plain_language": "Potrzebujesz zaświadczenia."},
+    {"source": "dokument_za_zyciem", "target": "status_za_zyciem", "relation": "potwierdza", "plain_language": "Zaświadczenie potwierdza uprawnienie."},
+    {"source": "status_wczesniak", "target": "swiadczenie_uzupelniajacy", "relation": "uprawnia", "plain_language": "Wcześniak lub hospitalizacja → uzupełniający urlop macierzyński."},
+    {"source": "swiadczenie_macierzynski", "target": "swiadczenie_uzupelniajacy", "relation": "poprzedza", "plain_language": "Uzupełniający urlop bierziesz od razu po macierzyńskim."},
+    {"source": "swiadczenie_macierzynski", "target": "ryzyko_14_tygodni_matka", "relation": "ogranicza", "plain_language": "Macierzyński ma 14 tygodni tylko dla matki."},
+    {"source": "swiadczenie_rodzicielski", "target": "ryzyko_9_tygodni_nieprzenoszalne", "relation": "ogranicza", "plain_language": "Rodzicielski ma 9 tygodni nieprzenoszalnych dla każdego rodzica."},
+    {"source": "przepis_stawki", "target": "swiadczenie_stawka_100", "relation": "ustala", "plain_language": "100% za macierzyński, uzupełniający i ojcowski."},
+    {"source": "przepis_stawki", "target": "swiadczenie_stawka_70", "relation": "ustala", "plain_language": "70% za rodzicielski bez wniosku 21-dniowego."},
+    {"source": "przepis_stawki", "target": "swiadczenie_stawka_815", "relation": "ustala", "plain_language": "81,5% za całość przy wniosku do 21 dni."},
+    {"source": "zdarzenie_wniosek_do_21_dni", "target": "swiadczenie_stawka_815", "relation": "wybiera", "plain_language": "Wniosek do 21 dni → 81,5%."},
+    {"source": "zdarzenie_wniosek_po_21_dniach", "target": "swiadczenie_stawka_100", "relation": "wybiera", "plain_language": "Późniejszy wniosek → 100% na macierzyński."},
+    {"source": "zdarzenie_wniosek_po_21_dniach", "target": "swiadczenie_stawka_70", "relation": "wybiera", "plain_language": "Późniejszy wniosek → 70% na rodzicielski."},
+    {"source": "zdarzenie_wniosek_po_21_dniach", "target": "ryzyko_termin_wniosku_21", "relation": "uruchamia", "plain_language": "Po terminie 21 dni stawka 81,5% odpada."},
+    {"source": "swiadczenie_stawka_815", "target": "swiadczenie_macierzynski", "relation": "stosuje_do", "plain_language": "81,5% obejmuje macierzyński."},
+    {"source": "swiadczenie_stawka_815", "target": "swiadczenie_rodzicielski", "relation": "stosuje_do", "plain_language": "81,5% obejmuje rodzicielski."},
+    {"source": "swiadczenie_stawka_100", "target": "swiadczenie_macierzynski", "relation": "stosuje_do", "plain_language": "100% na macierzyński."},
+    {"source": "swiadczenie_stawka_100", "target": "swiadczenie_uzupelniajacy", "relation": "stosuje_do", "plain_language": "100% na uzupełniający."},
+    {"source": "swiadczenie_stawka_100", "target": "swiadczenie_ojcowski", "relation": "stosuje_do", "plain_language": "100% na ojcowski."},
+    {"source": "swiadczenie_stawka_70", "target": "swiadczenie_rodzicielski", "relation": "stosuje_do", "plain_language": "70% na rodzicielski."},
+    {"source": "przepis_formularze_zam", "target": "dokument_zam", "relation": "wprowadza", "plain_language": "Od 24.10.2026 aktywny wniosek to ZAM."},
+    {"source": "przepis_formularze_zam", "target": "dokument_zniesione_zur_zao_z3b", "relation": "znosi", "plain_language": "ZUR, ZAO i Z-3b nie są już aktywnymi wnioskami."},
+    {"source": "dokument_zam", "target": "dokument_zniesione_zur_zao_z3b", "relation": "zastepuje", "plain_language": "ZAM zastępuje ZUR, ZAO i Z-3b."},
+    {"source": "dokument_zam", "target": "swiadczenie_macierzynski", "relation": "dokumentuje", "plain_language": "ZAM to wniosek o zasiłek macierzyński."},
+    {"source": "dokument_zam", "target": "swiadczenie_rodzicielski", "relation": "dokumentuje", "plain_language": "ZAM obejmuje też urlop rodzicielski."},
+    {"source": "przepis_platnik_20", "target": "status_duzy_platnik", "relation": "definiuje", "plain_language": "Próg powyżej 20 ubezpieczonych."},
+    {"source": "przepis_platnik_20", "target": "status_maly_platnik", "relation": "definiuje", "plain_language": "Poniżej progu zasiłek płaci ZUS."},
+    {"source": "status_duzy_platnik", "target": "swiadczenie_macierzynski", "relation": "wyplaca", "plain_language": "Duży pracodawca sam wypłaca zasiłek."},
+    {"source": "status_maly_platnik", "target": "dokument_z3", "relation": "wymaga", "plain_language": "Mały płatnik — umowa o pracę → Z-3 do ZUS."},
+    {"source": "status_maly_platnik", "target": "dokument_z3a", "relation": "wymaga", "plain_language": "Mały płatnik — zlecenie → Z-3a do ZUS."},
+    {"source": "status_umowa_o_prace", "target": "dokument_z3", "relation": "moze_wymagac", "plain_language": "Z-3 dotyczy pracownika na umowie o pracę."},
+    {"source": "status_zlecenie", "target": "dokument_z3a", "relation": "moze_wymagac", "plain_language": "Z-3a dotyczy zleceniobiorcy."},
+    {"source": "status_b2b", "target": "status_zaleglosci_skladek", "relation": "moze_oznaczac", "plain_language": "B2B z nieopłaconymi składkami to ryzyko odmowy."},
+    {"source": "status_zaleglosci_skladek", "target": "ryzyko_zaleglosci_b2b", "relation": "uruchamia", "plain_language": "Zaległości składek mogą zablokować zasiłek."},
+    {"source": "status_niepelnny_etat", "target": "ryzyko_podstawa_niepelnny_etat", "relation": "uruchamia", "plain_language": "Część etatu obniża podstawę, nie długość urlopu."},
+    {"source": "przepis_ustawa_zasilkowa", "target": "przepis_stawki", "relation": "zawiera", "plain_language": "Stawki są w ustawie zasiłkowej."},
+    {"source": "przepis_ustawa_zasilkowa", "target": "przepis_platnik_20", "relation": "zawiera", "plain_language": "Próg płatnika jest w ustawie zasiłkowej."},
+    {"source": "przepis_ustawa_zasilkowa", "target": "przepis_wyczekiwanie", "relation": "zawiera", "plain_language": "Wyczekiwanie jest w ustawie zasiłkowej."}
+  ]
+}

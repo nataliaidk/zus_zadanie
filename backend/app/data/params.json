@@ -1,0 +1,62 @@
+{
+  "legal_as_of": "2026-11",
+  "waiting_period_days": {
+    "umowa_o_prace": 30,
+    "zlecenie": 90,
+    "jdg": 90,
+    "b2b": 90
+  },
+  "maternity_weeks_by_children": {
+    "1": 20,
+    "2": 31,
+    "3": 33,
+    "4": 35,
+    "5": 37
+  },
+  "rates_percent": {
+    "maternity": 100.0,
+    "supplementary_maternity": 100.0,
+    "paternity": 100.0,
+    "parental": 70.0,
+    "combined_if_request_within_deadline": 81.5
+  },
+  "combined_rate_request_deadline_days": 21,
+  "employer_pays_if_insured_above": 20,
+  "forms": {
+    "active_parental_application": "ZAM",
+    "abolished": [
+      "ZUR",
+      "ZAO",
+      "Z-3b"
+    ],
+    "employee_to_zus": "Z-3",
+    "contractor_to_zus": "Z-3a"
+  },
+  "non_transferable_weeks_per_parent": 9,
+  "mother_only_weeks": 14,
+  "parental_weeks": {
+    "single": 41,
+    "multiples": 43,
+    "za_zyciem_single": 65,
+    "za_zyciem_multiples": 67
+  },
+  "source": ".cursorrules (HackNation ZUS, listopad 2026)",
+  "sickness_in_pregnancy": {
+    "rate_percent": 100.0,
+    "max_days": 270,
+    "code": "B"
+  },
+  "parental_max_parts": 5,
+  "parental_until_child_age_years": 6,
+  "paternity_calendar_days": 14,
+  "paternity_until_child_age_months": 12,
+  "paternity_adoption_max_age_years": 14,
+  "foster_age_limit_years": 7,
+  "foster_deferred_school_age_limit_years": 10,
+  "adoption_age_limit_years": 14,
+  "supplementary_maternity": {
+    "eligible_if_preterm_or_hospitalized": true,
+    "weeks": null,
+    "note": "Wymiar zależy od tygodnia ciąży i hospitalizacji dziecka; cursorrules nie podają konkretnej liczby tygodni."
+  }
+}

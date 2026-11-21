@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  font-size: 100%;
+}
+
+html[data-font="125"] {
+  font-size: 125%;
+}
+
+html[data-font="150"] {
+  font-size: 150%;
+}
+
+html[data-contrast="high"] {
+  background: #fff;
+  color: #000;
+}
+
+html[data-contrast="high"] body {
+  background: #fff;
+  color: #000;
+}
+
+html[data-hard="1"] body {
+  background: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+button,
+a,
+input,
+select,
+textarea,
+[role="button"] {
+  min-height: 44px;
+}
