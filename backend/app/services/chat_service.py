@@ -1,4 +1,4 @@
-"""Chat: GraphRAG internally, short plans and one follow-up at a time."""
+"""Chat: GraphRAG internally, context + short answers, refuse off-limits asks."""
 
 from __future__ import annotations
 
@@ -26,12 +26,12 @@ TOPICS: list[ChatButton] = [
 ]
 
 TOPIC_PROMPTS: dict[str, str] = {
-    "ciaza": "Jestem w ciąży i nie wiem, od czego zacząć.",
+    "ciaza": "Co z L4 w ciąży?",
     "porod": "Urodziło się dziecko. Jaki urlop i jaki wniosek?",
-    "wniosek": "Jaki wniosek złożyć po porodzie? Czy ZUR albo ZAO jeszcze obowiązują?",
+    "wniosek": "Kiedy i jaki wniosek złożyć po porodzie?",
     "zlecenie": "Pracuję na umowie zlecenie. Co z zasiłkiem w ciąży i po porodzie?",
     "b2b": "Prowadzę firmę / B2B. Co z zasiłkiem i składkami?",
-    "ojciec": "Jestem tatą. Ile jest urlopu ojcowskiego i do kiedy?",
+    "ojciec": "Jak wygląda urlop ojcowski?",
 }
 
 EMP_BUTTONS = [
@@ -61,16 +61,58 @@ DROP_FOR_VOLUNTARY = {
     "dokument_z3",
 }
 
+REFUSE = (
+    "Tego nie zrobię. To przewodnik — nic nie wysyłam do ZUS, nie loguję Cię na PUE "
+    "i nie wystawiam dokumentów. Mogę powiedzieć, jaki wniosek złożysz sama "
+    "u pracodawcy albo na PUE/eZUS."
+)
+
+REFUSE_MARKERS = (
+    "zignoruj instruk",
+    "ignore previous",
+    "ignore all",
+    "jailbreak",
+    "developer mode",
+    "system prompt",
+    "wyslij do zus",
+    "wyslij wniosek",
+    "zloz za mnie",
+    "zloz wniosek za",
+    "zaloguj mnie do",
+    "zaloguj mnie na pue",
+    "prawdziwy zus",
+    "haslo pue",
+    "haslo do zus",
+    "wygeneruj l4",
+    "wystaw l4",
+    "falszyw",
+    "fałszyw",
+    "oszukac zus",
+    "obejsc zus",
+    "fikcyjn",
+    "lewa umowa",
+    "api key",
+    "pesel kogo",
+)
+
 
 def _fold(text: str) -> str:
     normalized = unicodedata.normalize("NFD", text)
     return "".join(ch for ch in normalized if unicodedata.category(ch) != "Mn").lower()
 
 
+def _unauthorized(message: str) -> bool:
+    folded = _fold(message)
+    return any(marker in folded for marker in REFUSE_MARKERS)
+
+
 def _infer(message: str, prior: dict[str, Any]) -> dict[str, Any]:
     facts = dict(prior)
     folded = _fold(message)
-    if any(token in folded for token in ("nauczyciel", "naucyzciel", "szkol", "etat", "umow o prac", "umowe o prac")):
+    if any(
+        token in folded
+        for token in ("nauczyciel", "naucyzciel", "szkol", "etat", "umow o prac", "umowe o prac")
+    ):
         facts["employment"] = "umowa_o_prace"
     elif "zlecen" in folded:
         facts["employment"] = "zlecenie"
@@ -78,17 +120,38 @@ def _infer(message: str, prior: dict[str, Any]) -> dict[str, Any]:
         facts["employment"] = "b2b"
     if any(token in folded for token in ("ciaz", "miesiac ciazy", "miesiacu")):
         facts["topic"] = "ciaza"
-    if any(token in folded for token in ("urodz", "porod", "dzieck")) and "ojcow" not in folded:
-        facts["topic"] = facts.get("topic") or "porod"
+    elif (
+        any(token in folded for token in ("urodz", "porod"))
+        and "ojcow" not in folded
+        and facts.get("topic") != "ciaza"
+    ):
+        facts["topic"] = "porod"
     if any(token in folded for token in ("ojcow", "tata", "jestem tatem", "jestem ojcem")):
-        facts["topic"] = "ojciec"
-    if any(token in folded for token in ("zur", "zao", "z-3b", "wniosek zam", "jaki wniosek")):
-        facts["topic"] = facts.get("topic") or "wniosek"
+        facts["focus"] = "ojciec"
+    if any(token in folded for token in ("zur", "zao", "z-3b", "wniosek", " zam")):
+        facts["focus"] = "zam"
+    if any(token in folded for token in ("l4", "e-zla", "ezla", "zwolnien", "kod b", "chorob")):
+        facts["focus"] = "l4"
+    if any(token in folded for token in ("kto placi", "platnik", "kto wyplac")):
+        facts["focus"] = "payer"
+    if any(token in folded for token in ("81", "70%", "70 %", "stawk", "ile procent")):
+        facts["focus"] = "rate"
+    if any(token in folded for token in ("ile trwa", "ile tygod", "wymiar", "macierzyn", "rodzicielsk")):
+        facts["focus"] = facts.get("focus") or "duration"
     month = re.search(r"(\d+)\s*\.?\s*miesi", folded)
     if month:
         facts["pregnancy_month"] = int(month.group(1))
         facts["topic"] = facts.get("topic") or "ciaza"
     return facts
+
+
+def _wants_plan(folded: str, facts: dict[str, Any]) -> bool:
+    if facts.get("focus"):
+        return False
+    return any(
+        token in folded
+        for token in ("od czego", "zacza", "co robic", "co zrobic", "nie wiem", "porad")
+    ) or (facts.get("topic") == "ciaza" and not facts.get("asked"))
 
 
 class ChatService:
@@ -116,6 +179,7 @@ class ChatService:
             message = session.get("last") or "Jestem w ciąży i nie wiem, od czego zacząć."
         else:
             message = self._message_from(request)
+
         if not message:
             return ChatResponse(
                 session_id=session_id,
@@ -124,6 +188,17 @@ class ChatService:
                 buttons=TOPICS,
                 complete=False,
             )
+
+        if _unauthorized(message):
+            return ChatResponse(
+                session_id=session_id,
+                mode="question",
+                answer=REFUSE,
+                buttons=TOPICS,
+                complete=False,
+            )
+
+        session["facts"]["focus"] = None
         session["last"] = message
         session["facts"] = _infer(message, session["facts"])
         return self._reply(session_id, session, message)
@@ -139,40 +214,42 @@ class ChatService:
 
     def _reply(self, session_id: str, session: dict[str, Any], message: str) -> ChatResponse:
         facts = session["facts"]
-        if facts.get("topic") in {None, "ciaza"} and not facts.get("employment"):
-            if facts.get("topic") == "ciaza" or "zacza" in _fold(message) or "ciaz" in _fold(message):
-                if not facts.get("employment"):
-                    return ChatResponse(
-                        session_id=session_id,
-                        mode="question",
-                        answer=(
-                            "Żeby powiedzieć, od czego zacząć, potrzebuję jednej informacji: "
-                            "jak pracujesz? Od tego zależy, kto wypłaci zasiłek i ile wynosi wyczekiwanie."
-                        ),
-                        buttons=EMP_BUTTONS,
-                        complete=False,
-                    )
+        folded = _fold(message)
+        needs_job = not facts.get("employment") and (
+            facts.get("topic") == "ciaza" or "ciaz" in folded or "zacza" in folded
+        )
+        if needs_job and not facts.get("focus"):
+            return ChatResponse(
+                session_id=session_id,
+                mode="question",
+                answer=(
+                    "Żeby powiedzieć, od czego zacząć, potrzebuję jednej informacji: "
+                    "jak pracujesz? Od tego zależy, kto wypłaci zasiłek i ile wynosi wyczekiwanie."
+                ),
+                buttons=EMP_BUTTONS,
+                complete=False,
+            )
 
         query = self._graph_query(message, facts)
         citations = self._citations(query, facts.get("employment"))
         answer = self._compose(message, facts, citations)
+        facts["asked"] = True
         if llm.llm_configured():
             polished = llm.complete(
-                f"Sytuacja: {message}\n\nSzkic odpowiedzi (nie dodawaj faktów, nie licz kwot):\n{answer}",
+                f"Sytuacja (kontekst): {facts}\nPytanie: {message}\n\nSzkic:\n{answer}",
                 system=(
-                    "Jesteś spokojną doradczynią ZUS dla rodziców. Pisz po polsku, krótko, prosto. "
-                    "Zostaw plan w punktach, jeśli szkic go ma. Nie wspominaj grafu, silnika ani węzłów. "
-                    "Nie pytaj o liczbę dzieci. Nie wymyślaj kwot."
+                    "Doradczyni zasiłkowa, polski, krótko. Nie dodawaj faktów, nie licz kwot. "
+                    "Nie wspominaj grafu. Nie pytaj o liczbę dzieci. "
+                    "Odmawiaj wysyłki wniosków, logowania do ZUS i fałszywych dokumentów."
                 ),
             )
             if polished:
                 answer = polished
-        buttons = self._next_buttons(facts)
         return ChatResponse(
             session_id=session_id,
             mode="question",
             answer=answer,
-            buttons=buttons,
+            buttons=self._next_buttons(facts),
             citations=citations,
             complete=False,
         )
@@ -186,15 +263,13 @@ class ChatService:
             bits.append("zlecenie 90 dni wyczekiwania ZAM")
         elif emp in {"jdg", "b2b"}:
             bits.append("B2B JDG 90 dni wyczekiwania składki ZAM")
-        topic = facts.get("topic")
-        if topic == "ciaza":
+        focus = facts.get("focus") or facts.get("topic")
+        if focus == "l4" or facts.get("topic") == "ciaza":
             bits.append("ciąża zasiłek chorobowy kod B")
-        if topic == "porod":
-            bits.append("urlop macierzyński rodzicielski wniosek ZAM 21 dni")
-        if topic == "ojciec":
+        if focus in {"zam", "wniosek"} or facts.get("topic") == "porod":
+            bits.append("wniosek ZAM 21 dni nie ZUR")
+        if focus == "ojciec":
             bits.append("urlop ojcowski 14 dni")
-        if topic == "wniosek":
-            bits.append("wniosek ZAM nie ZUR ZAO")
         return " ".join(bits)
 
     def _citations(self, query: str, employment: Optional[str]) -> list[ChatCitation]:
@@ -229,36 +304,63 @@ class ChatService:
 
     def _compose(self, message: str, facts: dict[str, Any], citations: list[ChatCitation]) -> str:
         folded = _fold(message)
-        if any(token in folded for token in ("zur", "zao", "z-3b")):
+        focus = facts.get("focus")
+        if focus == "zam" or any(token in folded for token in ("zur", "zao", "z-3b", "zam")):
             return (
-                "ZUR, ZAO i Z-3b już nie składaj — od 24 października 2026 jest jeden wniosek: ZAM. "
-                "To ten sam wniosek o zasiłek macierzyński i rodzicielski."
+                "Składasz jeden wniosek ZAM. ZUR, ZAO i Z-3b od 24 października 2026 nie obowiązują. "
+                "Jeśli ZAM wpłynie w ciągu 21 dni od porodu, zasiłek za macierzyński i rodzicielski "
+                "wynosi 81,5% za całość. Później: 100% macierzyński i 70% rodzicielski."
             )
-        topic = facts.get("topic")
-        emp = facts.get("employment")
-        if topic == "ojciec":
+        if focus == "l4":
+            wait = (
+                "30 dni (etat — w szkole zwykle już je masz)"
+                if facts.get("employment") == "umowa_o_prace"
+                else "90 dni dobrowolnego chorobowego"
+                if facts.get("employment") in {"zlecenie", "b2b", "jdg"}
+                else "30 dni na etacie albo 90 na zleceniu/JDG"
+            )
             return (
-                "Urlop ojcowski to 14 dni (2 tygodnie) do ukończenia przez dziecko 12 miesięcy. "
-                "Zasiłek 100%. Składasz wniosek ZAM — nie stare ZUR.\n\n"
-                "Chcesz, żebym dopisała, jak to zestawić z urlopem mamy?"
+                f"L4 w ciąży (e-ZLA, kod B) to zasiłek chorobowy 100% podstawy, maksymalnie 270 dni, "
+                f"po wyczekiwaniu: {wait}. Lekarz wystawia e-ZLA, nic nie nosisz do ZUS w papierze. "
+                "Ja zwolnienia nie wystawiam."
             )
-        if topic == "wniosek" and topic != "porod":
+        if focus == "payer":
+            if facts.get("employment") == "umowa_o_prace":
+                return (
+                    "Przy etacie: jeśli pracodawca zgłaszał powyżej 20 ubezpieczonych "
+                    "(stan na 30 listopada poprzedniego roku), sam wypłaca zasiłek. "
+                    "Mniejszy pracodawca przekazuje Z-3 do ZUS i zasiłek płaci ZUS."
+                )
+            if facts.get("employment") == "zlecenie":
+                return "Na zleceniu zasiłek zwykle płaci ZUS. Zleceniodawca składa Z-3a."
+            if facts.get("employment") in {"b2b", "jdg"}:
+                return "Na B2B/JDG zasiłek płaci ZUS. Musisz mieć opłacone chorobowe — zaległości mogą zablokować wypłatę."
+            return "Powiedz, czy jesteś na etacie, zleceniu czy na firmie — wtedy powiem, kto płaci."
+        if focus == "ojciec":
             return (
-                "Po porodzie składasz wniosek ZAM (jeden druk). Starych ZUR, ZAO i Z-3b nie ma. "
-                "Jeśli złożysz ZAM w ciągu 21 dni od porodu, wychodzi 81,5% za macierzyński i rodzicielski razem. "
-                "Później: 100% za macierzyński i 70% za rodzicielski."
+                "Urlop ojcowski: 14 dni kalendarzowych do ukończenia przez dziecko 12 miesięcy, zasiłek 100%. "
+                "Wniosek ZAM, nie ZUR. To osobno od 9 tygodni rodzicielskiego, których tata nie może oddać mamie."
             )
-        if topic == "ciaza" or (emp and "zacza" in folded):
+        if focus == "rate":
+            return (
+                "Dwie ścieżki: ZAM do 21 dni po porodzie = 81,5% za macierzyński i rodzicielski. "
+                "Później = 100% macierzyński (i ojcowski) oraz 70% rodzicielski. Kwot nie zgaduję — do złotówek jest kalkulator."
+            )
+        if focus == "duration":
+            return (
+                "Przy jednym dziecku: macierzyński 20 tygodni (pierwsze 14 tylko dla matki), "
+                "rodzicielski 41 tygodni. Przy więcej dzieciach macierzyński 31–37 tygodni, rodzicielski 43. "
+                "Z zaświadczeniem „Za życiem”: 65 albo 67 tygodni rodzicielskiego."
+            )
+        if _wants_plan(folded, facts) and facts.get("employment"):
+            if facts.get("topic") == "porod":
+                return self._plan_birth(facts)
             return self._plan_pregnancy(facts)
-        if topic == "porod":
+        if facts.get("topic") == "porod" and _wants_plan(folded, facts):
             return self._plan_birth(facts)
         if citations:
-            first = citations[0].plain_language
-            return f"{first}\n\nJeśli chcesz, opisz krótko jak pracujesz — ułożę z tego konkretny plan krok po kroku."
-        return (
-            "Nie jestem pewna, o co pytasz. Napisz, czy jesteś w ciąży, po porodzie, czy chcesz urlop taty — "
-            "albo wybierz temat poniżej."
-        )
+            return citations[0].plain_language + " Jeśli chcesz, zapytaj konkretnie: L4, ZAM albo kto płaci."
+        return "Napisz, czy jesteś w ciąży, po porodzie, czy pytasz o urlop taty — albo wybierz temat poniżej."
 
     def _plan_pregnancy(self, facts: dict[str, Any]) -> str:
         month = facts.get("pregnancy_month")
@@ -266,62 +368,41 @@ class ChatService:
         when = f"w {month}. miesiącu ciąży" if month else "w ciąży"
         if emp == "umowa_o_prace":
             return (
-                f"Jesteś {when} i pracujesz na etacie. Oto prosty plan — od teraz do urlopu.\n\n"
-                "1. Teraz\n"
-                "Jeśli lekarz da L4 w ciąży (kod B), zasiłek chorobowy to 100% podstawy. "
-                "Na umowie o pracę wyczekiwanie wynosi 30 dni — w szkole zwykle już je masz. "
-                "L4 idzie elektronicznie do pracodawcy.\n\n"
-                "2. Kto płaci\n"
-                "Szkoła z więcej niż 20 ubezpieczonymi sama wypłaca zasiłek. "
-                "Mniejsza szkoła przekazuje do ZUS zaświadczenie Z-3.\n\n"
-                "3. Po porodzie (ważne: 21 dni)\n"
-                "Składasz jeden wniosek ZAM. ZUR, ZAO i Z-3b są zniesione. "
-                "ZAM w ciągu 21 dni od porodu = 81,5% za macierzyński i rodzicielski. "
-                "Później = 100% macierzyński i 70% rodzicielski.\n\n"
-                "4. Urlopy (przy jednym dziecku)\n"
-                "Macierzyński 20 tygodni (pierwsze 14 tylko dla Ciebie), potem rodzicielski 41 tygodni "
-                "(9 tygodni nieoddawalne dla każdego rodzica).\n\n"
-                "Napisz, czy rozwinąć L4 w ciąży, wniosek ZAM, albo urlop taty."
+                f"Jesteś {when} i pracujesz na etacie. Plan od teraz:\n\n"
+                "1. Teraz — L4 w ciąży (kod B) to 100% po 30 dniach ubezpieczenia; w szkole zwykle już je masz.\n"
+                "2. Kto płaci — szkoła powyżej 20 ubezpieczonych sama; mniejsza daje Z-3 do ZUS.\n"
+                "3. Po porodzie, 21 dni — jeden wniosek ZAM (nie ZUR/ZAO). 21 dni = 81,5% za całość.\n"
+                "4. Urlopy przy jednym dziecku — 20 tyg. macierzyńskiego, potem 41 rodzicielskiego "
+                "(9 tyg. nieoddawalne dla każdego rodzica).\n\n"
+                "O co dopytać: L4, ZAM albo urlop taty?"
             )
         if emp in {"zlecenie", "b2b", "jdg"}:
-            wait = "90 dni dobrowolnego ubezpieczenia chorobowego"
-            who = "ZUS (zleceniodawca daje Z-3a)" if emp == "zlecenie" else "ZUS — dopilnuj opłaconych składek"
+            wait = "90 dni dobrowolnego chorobowego"
+            who = "ZUS (Z-3a)" if emp == "zlecenie" else "ZUS — bez zaległości składek"
             return (
-                f"Jesteś {when} i pracujesz na {('zleceniu' if emp == 'zlecenie' else 'własnej działalności')}. "
-                "Plan:\n\n"
-                f"1. Teraz — L4 w ciąży (kod B) to 100%, ale najpierw {wait}. {who}.\n"
-                "2. Po porodzie — wniosek ZAM, nie ZUR/ZAO. 21 dni od porodu decyduje o 81,5% albo 100%+70%.\n"
-                "3. Urlop przy jednym dziecku — 20 tygodni macierzyńskiego, potem 41 rodzicielskiego.\n\n"
-                "Masz opłacone chorobowe? Jeśli nie, to pierwszy krok."
+                f"Jesteś {when} na {('zleceniu' if emp == 'zlecenie' else 'działalności')}. Plan:\n\n"
+                f"1. Teraz — L4 kod B, 100%, po {wait}. Płaci {who}.\n"
+                "2. Po porodzie — ZAM, nie ZUR. 21 dni decyduje o 81,5% albo 100%+70%.\n"
+                "3. Jedno dziecko — 20 tyg. macierzyńskiego, 41 rodzicielskiego."
             )
-        return (
-            f"Jesteś {when}. Żeby ułożyć plan, powiedz jeszcze, jak pracujesz: etat, zlecenie czy firma."
-        )
+        return f"Jesteś {when}. Powiedz, jak pracujesz: etat, zlecenie czy firma."
 
     def _plan_birth(self, facts: dict[str, Any]) -> str:
-        emp = facts.get("employment")
-        payer = ""
-        if emp == "umowa_o_prace":
-            payer = " Pracodawca wypłaca, jeśli zgłasza powyżej 20 osób; inaczej ZUS (Z-3)."
+        extra = ""
+        if facts.get("employment") == "umowa_o_prace":
+            extra = " Przy etacie duży pracodawca płaci sam, mniejszy — ZUS po Z-3."
         return (
-            "Po porodzie, po kolei:\n\n"
-            "1. Wniosek ZAM — jeden druk zamiast ZUR, ZAO i Z-3b.\n"
-            "2. Do 21 dni od porodu — jeśli chcesz 81,5% za macierzyński i rodzicielski razem.\n"
-            "3. Urlop (jedno dziecko) — 20 tygodni macierzyńskiego (14 tylko dla mamy), "
-            "potem 41 tygodni rodzicielskiego.\n"
-            f"4. Płatnik.{payer or ' ZUS albo pracodawca — zależy od liczby ubezpieczonych.'}\n\n"
-            "Tata ma osobno 14 dni urlopu ojcowskiego do 12. miesiąca życia dziecka."
+            "Po porodzie:\n"
+            "1. ZAM — jeden wniosek, bez ZUR/ZAO/Z-3b.\n"
+            "2. Do 21 dni, jeśli chcesz 81,5% za macierzyński i rodzicielski.\n"
+            "3. Jedno dziecko — 20 tyg. macierzyńskiego, 41 rodzicielskiego.\n"
+            f"4. Tata — 14 dni ojcowskiego do 12. miesiąca.{extra}"
         )
 
     def _next_buttons(self, facts: dict[str, Any]) -> list[ChatButton]:
-        if facts.get("topic") == "ciaza":
+        if facts.get("topic") in {"ciaza", "porod"} or facts.get("employment"):
             return [
                 ChatButton(id="ciaza", label="L4 w ciąży"),
-                ChatButton(id="wniosek", label="Wniosek ZAM"),
-                ChatButton(id="ojciec", label="Urlop taty"),
-            ]
-        if facts.get("topic") == "porod":
-            return [
                 ChatButton(id="wniosek", label="Wniosek ZAM"),
                 ChatButton(id="ojciec", label="Urlop taty"),
             ]
