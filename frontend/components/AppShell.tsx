@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { COPY, LINKS } from "@/lib/copy";
 import { methodLabel } from "@/lib/auth";
-import { LoginDialog } from "./LoginDialog";
+import { LoginDialog, LoginSuccessDialog } from "./LoginDialog";
 import { useGuide } from "./GuideProvider";
 
 const NAV = [
@@ -30,6 +30,8 @@ export function AppShell({
   const pathname = usePathname();
   const { user, logout, a11y, setA11y, loading, error } = useGuide();
   const [loginOpen, setLoginOpen] = useState(false);
+  const [loginOk, setLoginOk] = useState(false);
+  const logoutRef = useRef<HTMLButtonElement>(null);
 
   return (
     <div className="min-h-screen">
@@ -111,7 +113,7 @@ export function AppShell({
                 {methodLabel(user.method)} · PESEL {user.peselMasked}
               </span>
             </p>
-            <button type="button" className="control" onClick={logout}>
+            <button ref={logoutRef} type="button" className="control" onClick={logout}>
               Wyloguj
             </button>
           </div>
@@ -173,7 +175,23 @@ export function AppShell({
           </div>
         </div>
       </footer>
-      {loginOpen ? <LoginDialog onClose={() => setLoginOpen(false)} /> : null}
+      {loginOpen ? (
+        <LoginDialog
+          onClose={() => setLoginOpen(false)}
+          onSuccess={() => {
+            setLoginOpen(false);
+            setLoginOk(true);
+          }}
+        />
+      ) : null}
+      {loginOk ? (
+        <LoginSuccessDialog
+          onClose={() => {
+            setLoginOk(false);
+            queueMicrotask(() => logoutRef.current?.focus());
+          }}
+        />
+      ) : null}
     </div>
   );
 }

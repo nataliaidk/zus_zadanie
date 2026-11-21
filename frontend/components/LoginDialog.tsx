@@ -1,10 +1,51 @@
 "use client";
 
-import { FormEvent, useEffect, useId, useState } from "react";
+import { FormEvent, useEffect, useId, useRef, useState } from "react";
 import { DEMO_ACCOUNTS, type LoginMethod } from "@/lib/auth";
 import { useGuide } from "./GuideProvider";
 
-export function LoginDialog({ onClose }: { onClose: () => void }) {
+export function LoginSuccessDialog({ onClose }: { onClose: () => void }) {
+  const titleId = useId();
+  const okRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    okRef.current?.focus();
+    function onKey(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+      }
+      if (event.key === "Tab") {
+        event.preventDefault();
+        okRef.current?.focus();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  return (
+    <div className="dialog-backdrop" role="presentation" onClick={onClose}>
+      <div
+        className="dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <h2 id={titleId}>Pomyślnie zalogowano</h2>
+        <p className="mt-2" role="status" aria-live="polite">
+          Możesz korzystać z przewodnika jako zalogowana osoba. To nadal wersja demonstracyjna.
+        </p>
+        <button ref={okRef} type="button" className="btn-primary control mt-4" onClick={onClose}>
+          OK
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function LoginDialog({ onClose, onSuccess }: { onClose: () => void; onSuccess: () => void }) {
   const { loginPassword, loginMobywatel } = useGuide();
   const titleId = useId();
   const [tab, setTab] = useState<LoginMethod>("pue");
@@ -31,7 +72,7 @@ export function LoginDialog({ onClose }: { onClose: () => void }) {
       fail();
       return;
     }
-    onClose();
+    onSuccess();
   }
 
   function onPz(event: FormEvent) {
@@ -40,7 +81,7 @@ export function LoginDialog({ onClose }: { onClose: () => void }) {
       fail();
       return;
     }
-    onClose();
+    onSuccess();
   }
 
   function onMobywatel(event: FormEvent) {
@@ -49,7 +90,7 @@ export function LoginDialog({ onClose }: { onClose: () => void }) {
       fail();
       return;
     }
-    onClose();
+    onSuccess();
   }
 
   return (
