@@ -1,5 +1,9 @@
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+import json
+from pathlib import Path
+
+from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 
 from app.models.schemas import AdminParams, ChatRequest, ExplainRequest, ParentProfile
 from app.services.chat_service import ChatService
@@ -7,6 +11,8 @@ from app.services.graph_service import GraphService
 from app.services.params_service import ParamsService
 from app.services.pdf_parser import parse_and_calculate
 from app.services.rule_engine import calculate
+from app.services.samples import calculate_sample, list_samples, sample_pdf
+from app.services.sim_service import simulate
 
 app = FastAPI(
     title="Zasiłkowy Przewodnik Przyszłego Rodzica",
@@ -86,3 +92,46 @@ def api_get_params():
 @app.put("/api/admin/params")
 def api_put_params(payload: AdminParams):
     return params_service.replace(payload.model_dump(mode="json"))
+
+
+@app.get("/api/charities")
+def api_charities():
+    path = Path(__file__).resolve().parent / "data" / "charities.json"
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+@app.get("/api/samples")
+def api_samples():
+    return list_samples()
+
+
+@app.get("/api/samples/{sample_id}/pdf")
+def api_sample_pdf(sample_id: str):
+    try:
+        _meta, pdf = sample_pdf(sample_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Nieznana sprawa testowa.") from exc
+    return Response(content=pdf, media_type="application/pdf")
+
+
+@app.post("/api/samples/{sample_id}/calculate")
+def api_sample_calculate(sample_id: str):
+    try:
+        return calculate_sample(sample_id, params_service.get())
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Nieznana sprawa testowa.") from exc
+
+
+@app.post("/api/sim/{kind}")
+async def api_sim(kind: str, request: Request):
+    raw = await request.body()
+    profile = None
+    if raw.strip():
+        try:
+            profile = ParentProfile.model_validate_json(raw)
+        except Exception as exc:
+            raise HTTPException(status_code=422, detail="Niepoprawny profil.") from exc
+    try:
+        return simulate(kind, profile)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Nieznana symulacja.") from exc

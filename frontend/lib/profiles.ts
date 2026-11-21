@@ -18,6 +18,8 @@ export const DEMO_PROFILES: Record<Exclude<ProfileId, "guest" | "custom">, Paren
     part_time: false,
     b2b_arrears: false,
     request_days_after_birth: 0,
+    benefit_base_pln: 5200,
+    insured: true,
   },
   piotr: {
     employment_form: "b2b",
@@ -29,6 +31,8 @@ export const DEMO_PROFILES: Record<Exclude<ProfileId, "guest" | "custom">, Paren
     part_time: false,
     b2b_arrears: true,
     request_days_after_birth: 30,
+    benefit_base_pln: 8900,
+    insured: true,
   },
   kasia: {
     employment_form: "zlecenie",
@@ -40,6 +44,8 @@ export const DEMO_PROFILES: Record<Exclude<ProfileId, "guest" | "custom">, Paren
     part_time: false,
     b2b_arrears: false,
     request_days_after_birth: 0,
+    benefit_base_pln: 4100,
+    insured: true,
   },
 };
 

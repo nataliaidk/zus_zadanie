@@ -20,21 +20,21 @@ export default function RyzykaPage() {
 
   return (
     <AppShell aside={<DecisionCard />}>
-      <h1 className="font-semibold">Radar ryzyk</h1>
+      <h1>Radar ryzyk</h1>
       <p className="mt-2">
         Status opisany słowem (otwarte / zamknięte / groźba), nie samym kolorem.
       </p>
 
       <div className="mt-4 grid gap-4">
         {rows.map((row) => (
-          <article key={row.id} className="border p-4">
+            <article key={row.id} className="panel">
             <p>
               <strong>{row.status}</strong> | {row.title}
             </p>
             <p className="mt-2">{row.detail}</p>
             <button
               type="button"
-              className="mt-2 border px-4 py-2"
+              className="control mt-2"
               onClick={() => void explainNode(row.nodeId)}
             >
               Skąd ten wynik?
@@ -43,7 +43,8 @@ export default function RyzykaPage() {
         ))}
       </div>
 
-      <table className="mt-4 w-full border-collapse border">
+      <div className="table-wrap mt-4">
+      <table>
         <caption className="p-2 text-left">Radar ryzyk — tabela</caption>
         <thead>
           <tr>
@@ -62,6 +63,7 @@ export default function RyzykaPage() {
           ))}
         </tbody>
       </table>
+      </div>
       {explanation ? <ExplainPanel explanation={explanation} onClose={closeExplanation} /> : null}
     </AppShell>
   );

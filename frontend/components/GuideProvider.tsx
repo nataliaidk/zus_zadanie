@@ -47,9 +47,14 @@ export function GuideProvider({ children }: { children: React.ReactNode }) {
   const plan = useParentPlan(calculation, profile);
 
   useEffect(() => {
-    document.documentElement.dataset.font = String(a11y.fontScale);
-    document.documentElement.dataset.contrast = a11y.highContrast ? "high" : "normal";
-    document.documentElement.dataset.hard = a11y.hardSituation ? "1" : "0";
+    const root = document.documentElement;
+    root.dataset.font = String(a11y.fontScale);
+    root.dataset.contrast = a11y.highContrast ? "high" : "normal";
+    root.dataset.hard = a11y.hardSituation ? "1" : "0";
+    root.classList.toggle("contrast", a11y.highContrast);
+    root.classList.toggle("hard", a11y.hardSituation);
+    root.classList.toggle("scale-125", a11y.fontScale === 125);
+    root.classList.toggle("scale-150", a11y.fontScale === 150);
   }, [a11y]);
 
   const loadDemo = useCallback(async (id: ProfileId) => {

@@ -4,13 +4,186 @@ from app.models.schemas import (
     CalculationResult,
     DocumentItem,
     EmploymentForm,
+    FamilyPath,
+    FilingItem,
     LeaveItem,
     ParentProfile,
     Payer,
+    PregnancyItem,
     RiskItem,
 )
 
 ABOLISHED_FORMS = ("ZUR", "ZAO", "Z-3b")
+WEEKS_PER_MONTH = 4.345
+
+
+def _amount(base: float | None, rate: float, weeks: float | None) -> float | None:
+    if base is None or weeks is None:
+        return None
+    return round(base * (rate / 100.0) * (weeks / WEEKS_PER_MONTH), 2)
+
+
+def _pregnancy_block(profile: ParentProfile, params: dict[str, Any], waiting: int) -> list[PregnancyItem]:
+    sick = params["sickness_in_pregnancy"]
+    items: list[PregnancyItem] = []
+    if profile.apparent_contract:
+        items.append(
+            PregnancyItem(
+                code="pozor",
+                title="Brak uprawnień — umowa dla pozoru",
+                entitled=False,
+                plain_language=(
+                    "ZUS może uznać, że umowa albo działalność była tylko po to, "
+                    "żeby dostać zasiłek. Wtedy nie ma ubezpieczenia chorobowego i nie ma zasiłków."
+                ),
+            )
+        )
+        return items
+    if not profile.insured:
+        items.append(
+            PregnancyItem(
+                code="brak_ubezpieczenia",
+                title="Brak uprawnień — nie ma ubezpieczenia chorobowego",
+                entitled=False,
+                plain_language=(
+                    "Na dzień porodu albo niezdolności do pracy nie podlegasz ubezpieczeniu chorobowemu "
+                    "(np. nie zgłosiłaś dobrowolnego, skończyła się umowa). Zasiłek chorobowy nie przysługuje."
+                ),
+            )
+        )
+        return items
+    if profile.insurance_days is not None and profile.insurance_days < waiting:
+        items.append(
+            PregnancyItem(
+                code="wyczekiwanie",
+                title="Brak uprawnień — za krótki staż",
+                entitled=False,
+                max_days=waiting,
+                plain_language=(
+                    f"Zasiłek chorobowy w ciąży przysługuje po {waiting} dniach ubezpieczenia. "
+                    f"U Ciebie jest {profile.insurance_days} dni."
+                ),
+            )
+        )
+    else:
+        items.append(
+            PregnancyItem(
+                code="chorobowy_ciaza",
+                title="Zasiłek chorobowy w ciąży (kod B)",
+                entitled=True,
+                rate_percent=sick["rate_percent"],
+                max_days=sick["max_days"],
+                amount_pln=_amount(profile.benefit_base_pln, sick["rate_percent"], sick["max_days"] / 7),
+                plain_language=(
+                    f"100% podstawy, kod B na e-ZLA, maksymalnie {sick['max_days']} dni. "
+                    "Pracownica: najpierw wynagrodzenie chorobowe, potem zasiłek. "
+                    "Zlecenie / JDG: zasiłek od pierwszego dnia niezdolności."
+                ),
+            )
+        )
+        if profile.rehab_after_sickness:
+            items.append(
+                PregnancyItem(
+                    code="rehabilitacyjne",
+                    title="Świadczenie rehabilitacyjne",
+                    entitled=True,
+                    rate_percent=100,
+                    plain_language=(
+                        "Gdy skończy się 270 dni zasiłku, a nadal nie możesz pracować, "
+                        "lekarz ZUS może przyznać świadczenie rehabilitacyjne. To nie jest urlop macierzyński."
+                    ),
+                )
+            )
+    if profile.employer_bankruptcy or profile.unlawful_dismissal:
+        items.append(
+            PregnancyItem(
+                code="macierzynski_po_ustaniu",
+                title="Zasiłek w wysokości zasiłku macierzyńskiego (do porodu)",
+                entitled=True,
+                rate_percent=100,
+                amount_pln=_amount(profile.benefit_base_pln, 100, 4),
+                plain_language=(
+                    "Po utracie pracy w ciąży z powodu upadłości, likwidacji, śmierci pracodawcy "
+                    "albo nielegalnego zwolnienia (wyrok) przysługuje zasiłek 100% do dnia porodu, "
+                    "nawet po ustaniu ubezpieczenia."
+                ),
+            )
+        )
+    elif profile.job_ended_before_birth:
+        items.append(
+            PregnancyItem(
+                code="utrata_pracy",
+                title="Ryzyko braku zasiłku po rozwiązaniu umowy",
+                entitled=False,
+                plain_language=(
+                    "Jeśli umowa, zlecenie albo JDG skończą się przed porodem i nie ma wyjątku "
+                    "(upadłość / nielegalne zwolnienie), na dzień porodu możesz nie mieć ubezpieczenia."
+                ),
+            )
+        )
+    return items
+
+
+def _filing(profile: ParentProfile, payer: Payer) -> list[FilingItem]:
+    items = [
+        FilingItem(
+            where="ZUS albo pracodawca",
+            what="Wniosek ZAM",
+            deadline="Najlepiej w 21 dni po porodzie (81,5% za całość).",
+            plain_language=(
+                "Od 24.10.2026 jeden wniosek ZAM. ZUR, ZAO i Z-3b nie składaj — są zniesione. "
+                "Wzory: zus.pl (Wzory formularzy, Zasiłki)."
+            ),
+        )
+    ]
+    if payer == Payer.employer:
+        items.append(
+            FilingItem(
+                where="Twój pracodawca",
+                what="Wniosek o urlop + ZAM u pracodawcy",
+                deadline="Przed startem urlopu (macierzyński można 6 tyg. przed porodem).",
+                plain_language=(
+                    "Pracodawca zgłasza powyżej 20 osób, więc sam liczy i wypłaca zasiłek. "
+                    "Nie idziesz z Z-3 do ZUS."
+                ),
+            )
+        )
+    elif profile.employment_form == EmploymentForm.umowa_o_prace:
+        items.append(
+            FilingItem(
+                where="ZUS (przez pracodawcę)",
+                what="ZAM + zaświadczenie Z-3",
+                deadline="Z-3 składa pracodawca po Twoim wniosku o urlop.",
+                plain_language="Mniejszy płatnik nie wypłaca sam — wysyła Z-3 do ZUS.",
+            )
+        )
+    elif profile.employment_form == EmploymentForm.zlecenie:
+        items.append(
+            FilingItem(
+                where="ZUS",
+                what="ZAM + Z-3a od zleceniodawcy",
+                deadline="Jak najszybciej po porodzie / starcie zasiłku.",
+                plain_language="Zleceniodawca nie wypłaca — do ZUS idzie ZAM i Z-3a.",
+            )
+        )
+    else:
+        items.append(
+            FilingItem(
+                where="ZUS",
+                what="ZAM (JDG / B2B) albo ZAS-53 przy chorobie",
+                deadline="Choroba: po e-ZLA. Macierzyński: po porodzie, 21 dni na 81,5%.",
+                plain_language="Składasz sama do ZUS. Przy chorobie ZAS-53. Zaległości składek mogą zablokować wypłatę.",
+            )
+        )
+    items.append(
+        FilingItem(
+            where="PUE/eZUS",
+            what="e-ZLA (kod B) i korespondencja",
+            deadline="Lekarz wysyła e-ZLA od razu do ZUS i na profil pracodawcy.",
+            plain_language="Pracownica zgłasza nieobecność pracodawcy. JDG nie pracuje i składa dokumenty do ZUS.",
+        )
+    )
+    return items
 
 
 def _maternity_weeks(children: int, params: dict[str, Any]) -> int:
@@ -59,16 +232,52 @@ def calculate(profile: ParentProfile, params: dict[str, Any]) -> CalculationResu
     )
     non_transferable = params["non_transferable_weeks_per_parent"]
     mother_only = params["mother_only_weeks"]
+    maternity_title = "Urlop macierzyński"
+
+    if profile.stillbirth:
+        maternity_weeks = 8
+        maternity_title = "Urlop macierzyński (martwe urodzenie / zgon dziecka)"
+    if profile.family_path == FamilyPath.adoption:
+        maternity_title = "Urlop na warunkach macierzyńskiego (adopcja)"
+        limit = params["adoption_age_limit_years"]
+        if profile.child_age_years is not None and profile.child_age_years >= limit:
+            blocked_age = True
+        else:
+            blocked_age = False
+    elif profile.family_path == FamilyPath.foster:
+        maternity_title = "Urlop na warunkach macierzyńskiego (rodzina zastępcza niezawodowa)"
+        limit = (
+            params["foster_deferred_school_age_limit_years"]
+            if profile.school_deferred
+            else params["foster_age_limit_years"]
+        )
+        blocked_age = profile.child_age_years is not None and profile.child_age_years >= limit
+    else:
+        blocked_age = False
+        limit = None
 
     poka_yoke: list[str] = []
     blocked = False
     block_reason = None
-    if profile.transfer_first_14_weeks_to_other_parent:
+    exception_14 = profile.mother_hospitalized or profile.mother_incapacity
+    if profile.transfer_first_14_weeks_to_other_parent and not exception_14:
         blocked = True
         block_reason = (
             f"Pierwsze {mother_only} tygodni urlopu macierzyńskiego są dla matki. "
             "Nie można ich oddać drugiemu rodzicowi "
             "(wyjątki: szpital, niezdolność do samodzielnej egzystencji, zgon lub porzucenie)."
+        )
+        poka_yoke.append(block_reason)
+    elif profile.transfer_first_14_weeks_to_other_parent and exception_14:
+        poka_yoke.append(
+            "Wyjątek od 14 tygodni: szpital albo niezdolność matki — ojciec może przejąć wcześniej."
+        )
+    if blocked_age:
+        blocked = True
+        block_reason = (
+            f"Dziecko ma {profile.child_age_years:g} lat. Urlop na warunkach macierzyńskiego "
+            f"przysługuje do {limit} r.ż."
+            + (" (odroczenie szkoły)." if profile.school_deferred else ".")
         )
         poka_yoke.append(block_reason)
 
@@ -79,12 +288,13 @@ def calculate(profile: ParentProfile, params: dict[str, Any]) -> CalculationResu
     leaves = [
         LeaveItem(
             leave_type="macierzynski",
-            title="Urlop macierzyński",
+            title=maternity_title,
             weeks=maternity_weeks,
             rate_percent=maternity_rate,
             transferable=False,
-            mother_only=True,
+            mother_only=not exception_14,
             graph_node_id="swiadczenie_macierzynski",
+            amount_pln=_amount(profile.benefit_base_pln, maternity_rate, maternity_weeks),
             plain_language=(
                 f"{maternity_weeks} tygodni. Pierwsze {mother_only} tygodni tylko dla matki. "
                 f"Zasiłek {maternity_rate:g}%."
@@ -97,10 +307,27 @@ def calculate(profile: ParentProfile, params: dict[str, Any]) -> CalculationResu
             rate_percent=parental_rate,
             transferable=True,
             graph_node_id="swiadczenie_rodzicielski",
+            amount_pln=_amount(profile.benefit_base_pln, parental_rate, parental_weeks),
+            calendar_weeks=(
+                round(parental_weeks / (1 - profile.combine_work_fraction), 1)
+                if profile.combine_work_fraction
+                else float(parental_weeks)
+            ),
             plain_language=(
                 f"{parental_weeks} tygodni łącznie. "
                 f"{non_transferable} tygodni nieprzenoszalnych dla każdego rodzica. "
                 f"Zasiłek {parental_rate:g}%."
+                + (
+                    f" Przy pracy na {profile.combine_work_fraction:.0%} etatu kalendarz wydłuża się "
+                    f"do {parental_weeks / (1 - profile.combine_work_fraction):.1f} tyg."
+                    if profile.combine_work_fraction
+                    else ""
+                )
+                + (
+                    " Rodzice mogą korzystać jednocześnie, ale 9 tygodni zostaje u każdego."
+                    if profile.parental_together
+                    else ""
+                )
             ),
         ),
         LeaveItem(
@@ -111,23 +338,34 @@ def calculate(profile: ParentProfile, params: dict[str, Any]) -> CalculationResu
             rate_percent=rates["paternity"],
             transferable=False,
             graph_node_id="swiadczenie_ojcowski",
+            amount_pln=_amount(profile.benefit_base_pln, rates["paternity"], 2),
             plain_language=(
                 f"{params['paternity_calendar_days']} dni kalendarzowych "
-                f"(do {params['paternity_until_child_age_months']} miesięcy życia dziecka). "
-                f"Zasiłek {rates['paternity']:g}%."
+                f"(do {params['paternity_until_child_age_months']} miesięcy życia dziecka"
+                + (
+                    f", przy adopcji max {params['paternity_adoption_max_age_years']} r.ż."
+                    if profile.family_path == FamilyPath.adoption
+                    else ""
+                )
+                + f"). Zasiłek {rates['paternity']:g}%."
             ),
         ),
     ]
     if profile.preterm:
+        # shortcut: 8 tyg. gdy params nie podają wymiaru; upgrade: tydzień ciąży + hospitalizacja
+        supp_weeks = params["supplementary_maternity"]["weeks"] or 8
         leaves.insert(
             1,
             LeaveItem(
                 leave_type="uzupelniajacy_macierzynski",
                 title="Uzupełniający urlop macierzyński",
-                weeks=params["supplementary_maternity"]["weeks"],
+                weeks=supp_weeks,
                 rate_percent=rates["supplementary_maternity"],
                 transferable=True,
                 graph_node_id="swiadczenie_uzupelniajacy",
+                amount_pln=_amount(
+                    profile.benefit_base_pln, rates["supplementary_maternity"], supp_weeks
+                ),
                 plain_language=(
                     "Jednorazowo, od razu po macierzyńskim, zasiłek 100%. "
                     + params["supplementary_maternity"]["note"]
@@ -252,6 +490,26 @@ def calculate(profile: ParentProfile, params: dict[str, Any]) -> CalculationResu
                 graph_node_id="ryzyko_zaleglosci_b2b",
             )
         )
+    if profile.apparent_contract:
+        risks.append(
+            RiskItem(
+                code="pozorna_umowa",
+                title="Umowa albo JDG dla pozoru",
+                severity="block",
+                plain_language="ZUS może uznać, że nie podlegasz ubezpieczeniu — wtedy nie ma zasiłków.",
+                graph_node_id="ryzyko_pozorna_umowa",
+            )
+        )
+    if profile.job_ended_before_birth:
+        risks.append(
+            RiskItem(
+                code="brak_na_dzien_porodu",
+                title="Brak ubezpieczenia na dzień porodu",
+                severity="warning",
+                plain_language="Koniec umowy, zlecenia albo JDG przed porodem często oznacza brak zasiłku macierzyńskiego.",
+                graph_node_id="ryzyko_brak_ubezpieczenia_porod",
+            )
+        )
 
     explanation = [
         "swiadczenie_macierzynski",
@@ -278,6 +536,10 @@ def calculate(profile: ParentProfile, params: dict[str, Any]) -> CalculationResu
         block_reason=block_reason,
         explanation_node_ids=explanation,
         poka_yoke=poka_yoke,
+        pregnancy=_pregnancy_block(profile, params, waiting),
+        filing=_filing(profile, payer),
+        monthly_base_pln=profile.benefit_base_pln,
+        family_path=profile.family_path.value,
     )
 
 

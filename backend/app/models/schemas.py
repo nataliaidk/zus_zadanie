@@ -12,6 +12,12 @@ class EmploymentForm(str, Enum):
     b2b = "b2b"
 
 
+class FamilyPath(str, Enum):
+    birth = "birth"
+    adoption = "adoption"
+    foster = "foster"
+
+
 class Payer(str, Enum):
     employer = "pracodawca"
     zus = "ZUS"
@@ -34,6 +40,22 @@ class ParentProfile(BaseModel):
         description="Ile dni po porodzie matka złożyła wniosek o zasiłek macierzyński. Brak = nie wiadomo.",
     )
     transfer_first_14_weeks_to_other_parent: bool = False
+    family_path: FamilyPath = FamilyPath.birth
+    insured: bool = True
+    insurance_days: Optional[int] = Field(default=None, ge=0)
+    stillbirth: bool = False
+    child_age_years: Optional[float] = Field(default=None, ge=0)
+    school_deferred: bool = False
+    employer_bankruptcy: bool = False
+    unlawful_dismissal: bool = False
+    job_ended_before_birth: bool = False
+    apparent_contract: bool = False
+    benefit_base_pln: Optional[float] = Field(default=None, ge=0)
+    combine_work_fraction: float = Field(default=0, ge=0, le=0.5)
+    parental_together: bool = False
+    rehab_after_sickness: bool = False
+    mother_hospitalized: bool = False
+    mother_incapacity: bool = False
 
 
 class LeaveItem(BaseModel):
@@ -46,6 +68,8 @@ class LeaveItem(BaseModel):
     mother_only: bool = False
     graph_node_id: str
     plain_language: str
+    amount_pln: Optional[float] = None
+    calendar_weeks: Optional[float] = None
 
 
 class DocumentItem(BaseModel):
@@ -65,6 +89,23 @@ class RiskItem(BaseModel):
     graph_node_id: str
 
 
+class PregnancyItem(BaseModel):
+    code: str
+    title: str
+    entitled: bool
+    rate_percent: Optional[float] = None
+    max_days: Optional[int] = None
+    amount_pln: Optional[float] = None
+    plain_language: str
+
+
+class FilingItem(BaseModel):
+    where: str
+    what: str
+    deadline: str
+    plain_language: str
+
+
 class CalculationResult(BaseModel):
     legal_as_of: str
     waiting_period_days: int
@@ -77,6 +118,10 @@ class CalculationResult(BaseModel):
     block_reason: Optional[str] = None
     explanation_node_ids: list[str]
     poka_yoke: list[str]
+    pregnancy: list[PregnancyItem] = Field(default_factory=list)
+    filing: list[FilingItem] = Field(default_factory=list)
+    monthly_base_pln: Optional[float] = None
+    family_path: str = "birth"
 
 
 class ExplainRequest(BaseModel):

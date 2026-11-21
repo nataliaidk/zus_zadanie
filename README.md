@@ -2,11 +2,11 @@
 
 Aplikacja na hackathon ZUS (HackNation). Dostępność WCAG 2.1/2.2 AA+ i dostępność poznawcza oraz dokładność prawna (stan na listopad 2026).
 
-Repozytorium: [github.com/nataliaidk/zus_zadanie-](https://github.com/nataliaidk/zus_zadanie-)
+Repozytorium: [github.com/nataliaidk/zus_zadanie](https://github.com/nataliaidk/zus_zadanie)
 
 ## Stack
 
-- Frontend: Next.js App Router, TypeScript, Tailwind (tylko siatka/flex, `border`, `p-4`/`gap-4`, `:focus-visible`)
+- Frontend: Next.js App Router, TypeScript, Tailwind (układ + stany `:focus-visible`)
 - Backend: Python 3.11+, FastAPI, Pydantic, NetworkX
 - API: REST JSON (`/api` z frontu jest proxowane do FastAPI)
 
@@ -27,6 +27,8 @@ npm run dev
 ```
 
 Otwórz http://127.0.0.1:3000 — belka profili: Niezalogowany / Anna etat / Piotr B2B / Kasia zlecenie.
+
+Strony: Start (czat), Kalkulator, Plan, Ciąża, Dokumenty, Usługi (symulacje), Wsparcie, Ryzyka, Przepisy, Juror (PDF), Admin.
 
 Testy silnika: `cd backend && pytest`
 

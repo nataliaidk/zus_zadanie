@@ -151,6 +151,14 @@ def regex_extract(text: str) -> dict[str, Any]:
     elif re.search(r"podlega ubezpieczeniu chorob", text, re.I):
         fields["covered_on_birth"] = True
 
+    base = re.search(
+        r"podstawa\s+wymiaru[:\s]+(\d+(?:[.,]\d+)?)\s*(?:z[lł]|pln)?",
+        text,
+        re.I,
+    )
+    if base:
+        fields["benefit_base_pln"] = float(base.group(1).replace(",", "."))
+
     return fields
 
 
@@ -222,6 +230,8 @@ def to_profile(fields: dict[str, Any]) -> tuple[Optional[ParentProfile], list[st
             part_time=bool(fields.get("part_time", False)),
             b2b_arrears=bool(fields.get("b2b_arrears", False)),
             request_days_after_birth=fields.get("request_days_after_birth"),
+            benefit_base_pln=fields.get("benefit_base_pln"),
+            insured=fields.get("covered_on_birth", True) is not False,
         ),
         [],
     )

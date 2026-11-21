@@ -1,0 +1,37 @@
+[
+  {
+    "id": "rodzic-po-stracie",
+    "name": "Fundacja Rodzic po Stracie",
+    "situations": ["stillbirth", "miscarriage", "child_death"],
+    "help": "Wsparcie po poronieniu, martwym urodzeniu i śmierci dziecka.",
+    "url": "https://www.rodzicpostracie.pl"
+  },
+  {
+    "id": "pomóż-im-przetrwać",
+    "name": "Fundacja „Wcześniak” Rodzice-Rodzicom",
+    "situations": ["preterm"],
+    "help": "Wsparcie rodziców wcześniaków i dzieci hospitalizowanych po porodzie.",
+    "url": "https://www.wczesniak.pl"
+  },
+  {
+    "id": "widzialni",
+    "name": "Fundacja „Za Życiem” / ośrodki „Za życiem”",
+    "situations": ["za_zyciem", "ill_child"],
+    "help": "Opieka koordynowana przy ciężkiej, nieodwracalnej chorobie dziecka.",
+    "url": "https://www.gov.pl/web/rodzina/program-za-zyciem"
+  },
+  {
+    "id": "hospicjum",
+    "name": "Warszawskie Hospicjum dla Dzieci",
+    "situations": ["ill_child"],
+    "help": "Opieka paliatywna i wsparcie rodzin dzieci ciężko chorych.",
+    "url": "https://www.hospicjum.waw.pl"
+  },
+  {
+    "id": "poronienie",
+    "name": "Fundacja Po MOC",
+    "situations": ["miscarriage", "stillbirth"],
+    "help": "Grupy wsparcia i pomoc psychologiczna po stracie ciąży.",
+    "url": "https://www.pomoc.org.pl"
+  }
+]

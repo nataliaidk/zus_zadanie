@@ -1,4 +1,5 @@
 export type EmploymentForm = "umowa_o_prace" | "zlecenie" | "jdg" | "b2b";
+export type FamilyPath = "birth" | "adoption" | "foster";
 
 export type ParentProfile = {
   employment_form: EmploymentForm;
@@ -11,6 +12,22 @@ export type ParentProfile = {
   b2b_arrears?: boolean;
   request_days_after_birth?: number | null;
   transfer_first_14_weeks_to_other_parent?: boolean;
+  family_path?: FamilyPath;
+  insured?: boolean;
+  insurance_days?: number | null;
+  stillbirth?: boolean;
+  child_age_years?: number | null;
+  school_deferred?: boolean;
+  employer_bankruptcy?: boolean;
+  unlawful_dismissal?: boolean;
+  job_ended_before_birth?: boolean;
+  apparent_contract?: boolean;
+  benefit_base_pln?: number | null;
+  combine_work_fraction?: number;
+  parental_together?: boolean;
+  rehab_after_sickness?: boolean;
+  mother_hospitalized?: boolean;
+  mother_incapacity?: boolean;
 };
 
 export type LeaveItem = {
@@ -23,6 +40,8 @@ export type LeaveItem = {
   mother_only: boolean;
   graph_node_id: string;
   plain_language: string;
+  amount_pln: number | null;
+  calendar_weeks: number | null;
 };
 
 export type DocumentItem = {
@@ -42,6 +61,23 @@ export type RiskItem = {
   graph_node_id: string;
 };
 
+export type PregnancyItem = {
+  code: string;
+  title: string;
+  entitled: boolean;
+  rate_percent: number | null;
+  max_days: number | null;
+  amount_pln: number | null;
+  plain_language: string;
+};
+
+export type FilingItem = {
+  where: string;
+  what: string;
+  deadline: string;
+  plain_language: string;
+};
+
 export type CalculationResult = {
   legal_as_of: string;
   waiting_period_days: number;
@@ -54,6 +90,10 @@ export type CalculationResult = {
   block_reason: string | null;
   explanation_node_ids: string[];
   poka_yoke: string[];
+  pregnancy: PregnancyItem[];
+  filing: FilingItem[];
+  monthly_base_pln: number | null;
+  family_path: string;
 };
 
 export type ChatButton = { id: string; label: string };
@@ -111,3 +151,25 @@ export type A11yState = {
   highContrast: boolean;
   fontScale: 100 | 125 | 150;
 };
+
+export type Charity = {
+  id: string;
+  name: string;
+  situations: string[];
+  help: string;
+  url: string;
+};
+
+export type SampleCase = {
+  id: string;
+  title: string;
+  document: string;
+  outcome: string;
+  benefit_base_pln?: number | null;
+  kind: string;
+};
+
+export function pln(value: number | null | undefined): string {
+  if (value == null) return "—";
+  return value.toLocaleString("pl-PL", { style: "currency", currency: "PLN" });
+}

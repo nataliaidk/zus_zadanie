@@ -1,15 +1,12 @@
 "use client";
 
-import { useGuide } from "./GuideProvider";
+import { pln } from "@/lib/types";
 import { ExplainPanel } from "./ExplainPanel";
-
-function pct(value: number): string {
-  return String(value).replace(".", ",");
-}
+import { useGuide } from "./GuideProvider";
 
 function severityWord(severity: string): string {
   if (severity === "block") return "Blokada";
-  if (severity === "warning") return "Ostrzeżenie";
+  if (severity === "warning") return "Uwaga";
   return "Info";
 }
 
@@ -17,94 +14,120 @@ export function DecisionCard() {
   const { calculation, profile, a11y, explainNode, explanation, closeExplanation, loading } = useGuide();
 
   if (loading) {
-    return <p aria-live="polite">Liczenie…</p>;
-  }
-
-  if (!calculation) {
     return (
-      <div>
-        <h2 className="font-semibold">Co Ci przysługuje</h2>
-        <p className="mt-2">
-          Odpowiedzi z lewej strony albo profil z belki wypełnią tę kartę. Nic jeszcze nie policzono.
-        </p>
-      </div>
+      <section className="plan-card" aria-live="polite">
+        <p>Liczenie…</p>
+      </section>
     );
   }
 
-  const maternity = calculation.leaves.find((item) => item.leave_type === "macierzynski");
-  const parental = calculation.leaves.find((item) => item.leave_type === "rodzicielski");
-  const rates = maternity && parental
-    ? calculation.combined_rate_applied
-      ? `Stawki: macierzyński ${pct(maternity.rate_percent)}%, rodzicielski ${pct(parental.rate_percent)}% (81,5% za całość — wniosek w 21 dni).`
-      : `Stawki: macierzyński ${pct(maternity.rate_percent)}%, rodzicielski ${pct(parental.rate_percent)}% (100% + 70%).`
-    : "";
-  const active = calculation.documents.filter((doc) => doc.active).map((doc) => doc.code).join(", ");
-
   return (
-    <div>
-      <h2 className="font-semibold">Co Ci przysługuje</h2>
-      {calculation.blocked && calculation.block_reason ? (
-        <p className="mt-2 border p-4" role="alert">
-          {calculation.block_reason}
-        </p>
-      ) : null}
-
-      <div className="mt-4 grid gap-4" aria-live="polite">
-        {calculation.leaves.map((item) => (
-          <article key={item.leave_type} className="border p-4">
-            <h3 className="font-semibold">
-              {item.title} — {item.weeks ?? "?"} tyg.
-            </h3>
-            <p className="mt-2">
-              {a11y.language === "legal"
-                ? `Węzeł grafu: ${item.graph_node_id}. ${item.plain_language}`
-                : item.plain_language}
-            </p>
-          </article>
-        ))}
+    <section className="plan-card" aria-live="polite">
+      <div className="plan-head">
+        <p className="eyebrow">Twój plan</p>
+        <h2>{calculation ? "Co Ci przysługuje" : "Tutaj powstanie Twoja osobista ścieżka"}</h2>
       </div>
-
-      <article className="mt-4 border p-4">
-        <h3 className="font-semibold">Ile i od kogo</h3>
-        <p className="mt-2">
-          Płatnik: <strong>{calculation.payer}</strong>
-          {calculation.payer === "ZUS"
-            ? ' (nie „płatnik składek” — ZUS wypłaca, bo firma zgłasza do 20 osób).'
-            : " (Twój pracodawca wypłaca, bo zgłaszał powyżej 20 osób)."}
-        </p>
-        <p>{rates}</p>
-        <p>Aktywny wniosek: {active || "ZAM"}. ZUR / ZAO / Z-3b nie są aktywne.</p>
-        {profile ? (
-          <p className="mt-2">
-            Forma: {profile.employment_form}, poród {profile.birth_date}, dzieci {profile.number_of_children}.
-          </p>
-        ) : null}
-      </article>
-
-      <section className="mt-4">
-        <h3 className="font-semibold">Na co uważać (Radar ryzyk)</h3>
-        <div className="mt-2 grid gap-4">
-          {calculation.risks.map((risk) => (
-            <article key={risk.code} className="border p-4">
-              <p>
-                <span className="font-semibold">{severityWord(risk.severity)}</span> {risk.title}
-              </p>
-              <p className="mt-2">{risk.plain_language}</p>
-              <button
-                type="button"
-                className="mt-2 border px-4 py-2"
-                onClick={() => void explainNode(risk.graph_node_id)}
-              >
-                Skąd ten wynik?
-              </button>
-            </article>
-          ))}
+      {!calculation ? (
+        <div className="flex flex-col gap-4">
+          <div className="step">
+            <span className="step-n">1</span>
+            <p>
+              <strong>Sytuacja zawodowa</strong>
+              <span className="block text-sm">Etat, zlecenie albo JDG</span>
+            </p>
+          </div>
+          <div className="step">
+            <span className="step-n">2</span>
+            <p>
+              <strong>Rodzina</strong>
+              <span className="block text-sm">Dzieci, adopcja, Za życiem</span>
+            </p>
+          </div>
+          <div className="step">
+            <span className="step-n">3</span>
+            <p>
+              <strong>Kwota i dokumenty</strong>
+              <span className="block text-sm">Podstawa z PDF, wniosek ZAM</span>
+            </p>
+          </div>
         </div>
-      </section>
-
-      {explanation ? (
-        <ExplainPanel explanation={explanation} onClose={closeExplanation} />
-      ) : null}
-    </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {calculation.blocked && calculation.block_reason ? (
+            <p role="alert" className="alert">
+              {calculation.block_reason}
+            </p>
+          ) : null}
+          {calculation.monthly_base_pln != null ? (
+            <p>
+              Podstawa: <strong>{pln(calculation.monthly_base_pln)}</strong>
+            </p>
+          ) : null}
+          <ul className="flex flex-col gap-3">
+            {calculation.leaves.map((item, index) => (
+              <li key={item.leave_type} className="step">
+                <span className="step-n done">{index + 1}</span>
+                <p>
+                  <strong>{item.title}</strong>
+                  {item.weeks != null ? ` — ${item.weeks} tyg.` : null}
+                  {item.amount_pln != null ? ` · ${pln(item.amount_pln)}` : null}
+                  <span className="block text-sm">
+                    {a11y.language === "legal" ? `Węzeł: ${item.graph_node_id}. ` : ""}
+                    {item.plain_language}
+                  </span>
+                </p>
+              </li>
+            ))}
+          </ul>
+          <div>
+            <h3>Ile i od kogo</h3>
+            <p className="mt-2">
+              Płatnik: <strong>{calculation.payer === "ZUS" ? "ZUS" : "Twój pracodawca"}</strong>
+              {calculation.payer === "ZUS"
+                ? " (ZUS wypłaca, bo firma zgłasza do 20 osób)."
+                : " (firma powyżej 20 ubezpieczonych sama wypłaca)."}
+            </p>
+            <p>
+              Stawka za całość: {calculation.combined_rate_applied ? "81,5% (wniosek w 21 dni)" : "100% + 70%"}.
+            </p>
+            <p>
+              Aktywny wniosek:{" "}
+              {calculation.documents
+                .filter((doc) => doc.active)
+                .map((doc) => doc.code)
+                .join(", ") || "ZAM"}
+              . ZUR / ZAO / Z-3b nie są aktywne.
+            </p>
+            {profile ? (
+              <p className="mt-2">
+                Forma: {profile.employment_form}, data {profile.birth_date}, dzieci {profile.number_of_children}.
+              </p>
+            ) : null}
+          </div>
+          <div>
+            <h3>Na co uważać</h3>
+            <ul className="mt-3 flex flex-col gap-3">
+              {calculation.risks.map((risk) => (
+                <li key={risk.code}>
+                  <p>
+                    <span
+                      className={`tag ${risk.severity === "block" ? "block" : risk.severity === "warning" ? "warn" : ""}`}
+                    >
+                      {severityWord(risk.severity)}
+                    </span>{" "}
+                    <strong>{risk.title}</strong>
+                  </p>
+                  <p>{risk.plain_language}</p>
+                  <button type="button" className="control mt-2" onClick={() => void explainNode(risk.graph_node_id)}>
+                    Skąd ten wynik?
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+      {explanation ? <ExplainPanel explanation={explanation} onClose={closeExplanation} /> : null}
+    </section>
   );
 }

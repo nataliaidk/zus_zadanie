@@ -9,7 +9,7 @@ export default function SymulatorPage() {
 
   return (
     <AppShell aside={<DecisionCard />}>
-      <h1 className="font-semibold">Symulator etatu</h1>
+      <h1>Symulator etatu</h1>
       <p className="mt-2">
         Jeśli łączysz urlop z pracą na 1/2 etatu, urlop jest na pozostałą połowę i kalendarzowo się
         wydłuża.
@@ -17,7 +17,7 @@ export default function SymulatorPage() {
       <label className="mt-4 grid gap-2">
         Ile tygodni puli rodzicielskiej chcesz łączyć z pracą na 1/2 etatu?
         <input
-          className="border p-2"
+          className="control"
           type="number"
           min={0}
           max={plan.parentalTotal}
@@ -25,7 +25,8 @@ export default function SymulatorPage() {
           onChange={(event) => plan.setHalfTimeWeeks(Number(event.target.value))}
         />
       </label>
-      <table className="mt-4 w-full border-collapse border">
+      <div className="table-wrap mt-4">
+      <table>
         <caption className="p-2 text-left">Porównanie puli i kalendarza</caption>
         <thead>
           <tr>
@@ -44,6 +45,7 @@ export default function SymulatorPage() {
           ))}
         </tbody>
       </table>
+      </div>
     </AppShell>
   );
 }

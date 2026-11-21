@@ -9,25 +9,26 @@ export default function PlanPage() {
 
   return (
     <AppShell aside={<DecisionCard />}>
-      <h1 className="font-semibold">Plan urlopów matki i ojca</h1>
+      <h1>Plan urlopów matki i ojca</h1>
       <p className="mt-2">
         Poka-yoke: nielegalny podział jest blokowany i wyjaśniany. Pierwsze 14 tygodni
         macierzyńskiego — matka. 9 tygodni rodzicielskiego — każdy rodzic osobno.
       </p>
 
       {!profile ? (
-        <p className="mt-4 border p-4">
+        <p className="note mt-4">
           Wybierz profil Anny, Piotra albo Kasi albo dokończ czat na Start.
         </p>
       ) : null}
 
       {plan.pokaMessage ? (
-        <p className="mt-4 border p-4" role="alert" aria-live="assertive">
+        <p className="alert mt-4" role="alert" aria-live="assertive">
           {plan.pokaMessage}
         </p>
       ) : null}
 
-      <table className="mt-4 w-full border-collapse border">
+      <div className="table-wrap mt-4">
+      <table>
         <caption className="p-2 text-left">Podział tygodni (tabela dla czytników ekranu)</caption>
         <thead>
           <tr>
@@ -58,12 +59,13 @@ export default function PlanPage() {
           </tr>
         </tbody>
       </table>
+      </div>
 
       <div className="mt-4 grid gap-4">
         <label className="grid gap-2">
           Tygodnie macierzyńskiego dla matki (minimum 14)
           <input
-            className="border p-2"
+            className="control"
             type="number"
             min={14}
             max={plan.maternityTotal}
@@ -73,12 +75,12 @@ export default function PlanPage() {
         </label>
         <label className="grid gap-2">
           Tygodnie macierzyńskiego dla ojca
-          <input className="border p-2" type="number" value={plan.maternityFather} readOnly />
+          <input className="control" type="number" value={plan.maternityFather} readOnly />
         </label>
         <label className="grid gap-2">
           Tygodnie rodzicielskiego dla matki
           <input
-            className="border p-2"
+            className="control"
             type="number"
             min={9}
             max={plan.parentalTotal - 9}
@@ -88,9 +90,9 @@ export default function PlanPage() {
         </label>
         <label className="grid gap-2">
           Tygodnie rodzicielskiego dla ojca
-          <input className="border p-2" type="number" value={plan.parentalFather} readOnly />
+          <input className="control" type="number" value={plan.parentalFather} readOnly />
         </label>
-        <button type="button" className="border px-4 py-2" onClick={plan.tryGiveFirst14ToFather}>
+        <button type="button" className="control" onClick={plan.tryGiveFirst14ToFather}>
           Spróbuj oddać pierwsze 14 tygodni ojcu (test poka-yoke)
         </button>
       </div>
@@ -98,7 +100,7 @@ export default function PlanPage() {
       <h2 className="mt-4 font-semibold">Checklista z terminami</h2>
       <ul className="mt-2 grid gap-2">
         {plan.checklist.map((item) => (
-          <li key={item} className="border p-2">
+          <li key={item} className="note">
             {item}
           </li>
         ))}

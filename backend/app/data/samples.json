@@ -1,0 +1,138 @@
+[
+  {
+    "id": "zam-etat",
+    "title": "ZAM — Anna, etat, 1 dziecko",
+    "document": "ZAM",
+    "outcome": "Przyznano zasiłek macierzyński 20 tyg. Wniosek po 21 dniach — 100% + 70%.",
+    "benefit_base_pln": 5200,
+    "kind": "zam"
+  },
+  {
+    "id": "z3-mniejszy",
+    "title": "Z-3 — mniejszy pracodawca, bliźniaki, 1/2 etatu",
+    "document": "Z-3",
+    "outcome": "ZUS ustala zasiłek; Z-3 od pracodawcy (12 ubezpieczonych).",
+    "benefit_base_pln": 3100,
+    "kind": "z3"
+  },
+  {
+    "id": "ubezp-ok",
+    "title": "Poświadczenie ubezpieczenia — podlega, bez zaległości",
+    "document": "UBEZP",
+    "outcome": "Ubezpieczenie chorobowe na dzień porodu: tak.",
+    "benefit_base_pln": 4800,
+    "kind": "insurance"
+  },
+  {
+    "id": "zur-zniesiony",
+    "title": "ZUR — formularz zniesiony",
+    "document": "ZUR",
+    "outcome": "Nie licz z ZUR. Od 24.10.2026 złóż ZAM.",
+    "benefit_base_pln": null,
+    "kind": "zur"
+  },
+  {
+    "id": "ciaza-kod-b",
+    "title": "Ciąża — zasiłek chorobowy kod B",
+    "document": "ZAM",
+    "kind": "zam",
+    "benefit_base_pln": 5200,
+    "outcome": "Kod B, 100%, max 270 dni. Potem możliwe świadczenie rehabilitacyjne.",
+    "profile": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": false,
+      "birth_date": "2026-11-01",
+      "number_of_children": 1,
+      "benefit_base_pln": 5200,
+      "rehab_after_sickness": true,
+      "request_days_after_birth": 10
+    }
+  },
+  {
+    "id": "brak-uprawnien",
+    "title": "Brak uprawnień — nieubezpieczona",
+    "document": "UBEZP",
+    "kind": "insurance",
+    "benefit_base_pln": 0,
+    "outcome": "Brak ubezpieczenia chorobowego — zasiłek chorobowy nie przysługuje.",
+    "profile": {
+      "employment_form": "zlecenie",
+      "company_insured_above_20": false,
+      "birth_date": "2026-11-01",
+      "number_of_children": 1,
+      "insured": false,
+      "benefit_base_pln": 0
+    }
+  },
+  {
+    "id": "za-zyciem",
+    "title": "Za życiem — 65 tyg. rodzicielskiego",
+    "document": "ZAM",
+    "kind": "zam",
+    "benefit_base_pln": 6100,
+    "outcome": "Urlop rodzicielski 65 tygodni (zaświadczenie Za życiem).",
+    "profile": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": true,
+      "birth_date": "2026-11-01",
+      "number_of_children": 1,
+      "za_zyciem_certificate": true,
+      "benefit_base_pln": 6100,
+      "request_days_after_birth": 5
+    }
+  },
+  {
+    "id": "adopcja",
+    "title": "Adopcja — dziecko 4 lata",
+    "document": "ZAM",
+    "kind": "zam",
+    "benefit_base_pln": 4500,
+    "outcome": "Urlop na warunkach macierzyńskiego (adopcja) do 14 r.ż.",
+    "profile": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": false,
+      "birth_date": "2026-06-01",
+      "number_of_children": 1,
+      "family_path": "adoption",
+      "child_age_years": 4,
+      "benefit_base_pln": 4500,
+      "request_days_after_birth": 0
+    }
+  },
+  {
+    "id": "zastepcza",
+    "title": "Rodzina zastępcza niezawodowa — 6 lat",
+    "document": "ZAM",
+    "kind": "zam",
+    "benefit_base_pln": 3800,
+    "outcome": "Urlop na warunkach macierzyńskiego do 7 r.ż.",
+    "profile": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": false,
+      "birth_date": "2020-03-01",
+      "number_of_children": 1,
+      "family_path": "foster",
+      "child_age_years": 6,
+      "benefit_base_pln": 3800,
+      "request_days_after_birth": 0
+    }
+  },
+  {
+    "id": "pol-etatu-razem",
+    "title": "Rodzicielski razem + praca 1/2 etatu",
+    "document": "ZAM",
+    "kind": "zam",
+    "benefit_base_pln": 5200,
+    "outcome": "Pula 41 tyg.; kalendarz przy 1/2 etatu wydłużony. Rodzice mogą iść razem.",
+    "profile": {
+      "employment_form": "umowa_o_prace",
+      "company_insured_above_20": false,
+      "birth_date": "2026-11-01",
+      "number_of_children": 1,
+      "combine_work_fraction": 0.5,
+      "parental_together": true,
+      "benefit_base_pln": 5200,
+      "request_days_after_birth": 0
+    }
+  }
+]
